@@ -21,7 +21,7 @@ final class Node {
     final Node left, right;
     final Color color;
 
-    public Node(int key, Node left, Node right, Color color) {
+    Node(int key, Node left, Node right, Color color) {
         this.key = key;
         this.left = left;
         this.right = right;
@@ -56,6 +56,8 @@ final class Node {
         return Objects.hash(key, left, right, color);
     }
 
+
+
     @Override
     public String toString() {
         return this == nil()
@@ -75,6 +77,10 @@ final class Node {
         private int key;
         private Node left = nil(), right = nil();
         private Color color;
+
+        static Builder copy(Node node) {
+            return new Builder().key(node.key).left(node.left).right(node.right).color(node.color);
+        }
 
         static Builder black(int key) {
             return new Builder().key(key).color(BLACK);

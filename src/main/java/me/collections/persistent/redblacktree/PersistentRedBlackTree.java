@@ -1,6 +1,10 @@
 package me.collections.persistent.redblacktree;
 
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
 import java.util.Objects;
+import java.util.function.Consumer;
 
 import static me.collections.persistent.redblacktree.Node.Color.BLACK;
 import static me.collections.persistent.redblacktree.Node.Color.RED;
@@ -11,7 +15,7 @@ import static me.collections.persistent.redblacktree.Node.nil;
  * @since 07/12/2017
  */
 @SuppressWarnings({"WeakerAccess", "SuspiciousNameCombination"})
-public class PersistentRedBlackTree {
+public class PersistentRedBlackTree implements Iterable<Integer> {
 
     final Node root;
 
@@ -23,12 +27,12 @@ public class PersistentRedBlackTree {
         this.root = root;
     }
 
-    public PersistentRedBlackTree put(int x) {
+    public PersistentRedBlackTree add(int x) {
         Node newNode = new Node(x, nil(), nil(), RED);
         return new PersistentRedBlackTree(makeBlack(insert(root, newNode)));
     }
 
-    Node insert(Node node, Node newNode) {
+    static Node insert(Node node, Node newNode) {
         if (node.isNil()) {
             return newNode;
         } else if (newNode.key < node.key){
@@ -79,7 +83,12 @@ public class PersistentRedBlackTree {
         return node;
     }
 
-
+    private static void inOrderTraverse(Node root, Consumer<Node> nodeConsumer) {
+        if (root.isNil()) return;
+        inOrderTraverse(root.left, nodeConsumer);
+        nodeConsumer.accept(root);
+        inOrderTraverse(root.right, nodeConsumer);
+    }
 
     @Override
     public String toString() {
@@ -99,5 +108,23 @@ public class PersistentRedBlackTree {
     @Override
     public int hashCode() {
         return Objects.hash(root);
+    }
+
+    @Override
+    public Iterator<Integer> iterator() {
+        List<Integer> nodes = new ArrayList<>();
+        inOrderTraverse(root, node -> nodes.add(node.key));
+        Iterator<Integer> iterator = nodes.iterator();
+        return new Iterator<Integer>() {
+            @Override
+            public boolean hasNext() {
+                return iterator.hasNext();
+            }
+
+            @Override
+            public Integer next() {
+                return iterator.next();
+            }
+        };
     }
 }

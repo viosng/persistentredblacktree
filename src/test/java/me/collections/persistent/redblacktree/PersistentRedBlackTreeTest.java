@@ -5,6 +5,9 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.TreeSet;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.Stream;
 
@@ -31,7 +34,7 @@ class PersistentRedBlackTreeTest {
 
     @ParameterizedTest
     @MethodSource("createBalanceTests")
-    void should_balance(String caseName, Node x) {
+    void should_balance_cases(String caseName, Node x) {
         Node balanceResult = red(2)
                 .left(black(1).build())
                 .right(black(3).build())
@@ -50,7 +53,7 @@ class PersistentRedBlackTreeTest {
 
     @ParameterizedTest
     @MethodSource("createBalanceOtherTests")
-    void should_balance_Other(Node x) {
+    void should_balance_other(Node x) {
         assertEquals(x, balance(x));
     }
 
@@ -58,9 +61,22 @@ class PersistentRedBlackTreeTest {
     void should_insert() {
         ThreadLocalRandom random = ThreadLocalRandom.current();
         PersistentRedBlackTree tree = new PersistentRedBlackTree();
+        TreeSet<Integer> treeSet = new TreeSet<>();
         for (int i = 0; i < 1000; i++) {
-            tree = tree.put(random.nextInt());
+            int v = random.nextInt();
+
+            tree = tree.add(v);
+            treeSet.add(v);
+
             Validator.validate(tree);
+
+            List<Integer> persistentTreeList = new ArrayList<>();
+            tree.iterator().forEachRemaining(persistentTreeList::add);
+
+            List<Integer> treeSetList = new ArrayList<>();
+            treeSet.iterator().forEachRemaining(treeSetList::add);
+
+            assertEquals(treeSetList, persistentTreeList);
         }
     }
 }
