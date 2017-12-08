@@ -142,6 +142,44 @@ public class PersistentRedBlackTree implements Iterable<Integer> {
         return node;
     }
 
+    static Node balanceRight(Node node) {
+        if (node.isNil()) return node;
+        boolean rightRedCase = node.isBlack() && !node.right.isNil() && node.right.isRed();
+        if (rightRedCase) {
+            return copy(node)
+                    .red()
+                    .right(makeBlack(node.right))
+                    .build();
+        }
+
+        Node left = node.left;
+        boolean rightBlackCase = node.isBlack() && !node.right.isNil() && node.right.isBlack() && !left.isNil();
+        if (rightBlackCase) {
+            if (left.isBlack()) {
+                return balance(copy(node)
+                        .left(copy(left)
+                                .red()
+                                .build())
+                        .build());
+            } else {
+                Node newRoot = left.right;
+                return red(newRoot.key)
+                        .left(balance(
+                                copy(left)
+                                        .black()
+                                        .right(newRoot.left)
+                                        .build()
+                                )
+                        )
+                        .right(copy(node)
+                                .left(newRoot.right)
+                                .build())
+                        .build();
+            }
+        }
+        return node;
+    }
+
     private static void inOrderTraverse(Node root, Consumer<Node> nodeConsumer) {
         if (root.isNil()) return;
         inOrderTraverse(root.left, nodeConsumer);

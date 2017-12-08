@@ -14,8 +14,7 @@ import java.util.stream.Stream;
 import static me.collections.persistent.redblacktree.Node.Builder.black;
 import static me.collections.persistent.redblacktree.Node.Builder.red;
 import static me.collections.persistent.redblacktree.Node.nil;
-import static me.collections.persistent.redblacktree.PersistentRedBlackTree.balance;
-import static me.collections.persistent.redblacktree.PersistentRedBlackTree.balanceLeft;
+import static me.collections.persistent.redblacktree.PersistentRedBlackTree.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
@@ -128,5 +127,55 @@ class PersistentRedBlackTreeTest {
     @MethodSource("createBalanceLeftTests")
     void should_balance_left(String caseName, Node target, Node expected) {
         assertEquals(expected, balanceLeft(target), caseName);
+    }
+
+    private static Stream<Arguments> createBalanceRightTests() {
+        return Stream.of(
+                Arguments.of("ignore empty", nil(), nil()),
+                Arguments.of("ignore red", red(1).right(black(5).build()).build(), red(1).right(black(5).build()).build()),
+                Arguments.of("right is red",
+                        black(1).right(red(1).build()).build(),
+                        red(1).right(black(1).build()).build()
+                ),
+                Arguments.of("left is black",
+                        black(1)
+                                .left(black(2).build())
+                                .right(black(3).build())
+                                .build(),
+                        black(1)
+                                .left(red(2).build())
+                                .right(black(3).build())
+                                .build()
+                ),
+                Arguments.of("left is red",
+                        black(1)
+                                .left(red(2)
+                                        .left(black(4).build())
+                                        .right(black(5)
+                                                .left(red(6).build())
+                                                .right(red(7).build())
+                                                .build())
+
+                                        .build())
+                                .right(black(3).build())
+                                .build(),
+                        red(5)
+                                .left(black(2)
+                                        .left(black(4).build())
+                                        .right(red(6).build())
+                                        .build())
+                                .right(black(1)
+                                        .left(red(7).build())
+                                        .right(black(3).build())
+                                        .build())
+                                .build()
+                )
+        );
+    }
+
+    @ParameterizedTest
+    @MethodSource("createBalanceRightTests")
+    void should_balance_right(String caseName, Node target, Node expected) {
+        assertEquals(expected, balanceRight(target), caseName);
     }
 }
