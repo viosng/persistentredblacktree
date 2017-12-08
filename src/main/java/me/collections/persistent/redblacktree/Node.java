@@ -83,11 +83,11 @@ final class Node {
         }
 
         static Builder black(int key) {
-            return new Builder().key(key).color(BLACK);
+            return new Builder().key(key).black();
         }
 
         static Builder red(int key) {
-            return new Builder().key(key).color(RED);
+            return new Builder().key(key).red();
         }
 
         Builder key(int key) {
@@ -107,6 +107,16 @@ final class Node {
 
         Builder color(Color color) {
             this.color = color;
+            return this;
+        }
+
+        Builder red() {
+            this.color = RED;
+            return this;
+        }
+
+        Builder black() {
+            this.color = BLACK;
             return this;
         }
 

@@ -7,7 +7,6 @@ import java.util.Objects;
 import java.util.function.Consumer;
 
 import static me.collections.persistent.redblacktree.Node.Builder.*;
-import static me.collections.persistent.redblacktree.Node.Color.BLACK;
 import static me.collections.persistent.redblacktree.Node.nil;
 
 /**
@@ -43,7 +42,7 @@ public class PersistentRedBlackTree implements Iterable<Integer> {
     }
 
     private static Node makeBlack(Node node) {
-        return new Node(node.key, node.left, node.right, BLACK);
+        return copy(node).black().build();
     }
 
     static Node balance(Node node) {
@@ -107,10 +106,39 @@ public class PersistentRedBlackTree implements Iterable<Integer> {
 
     static Node balanceLeft(Node node) {
         if (node.isNil()) return node;
-        boolean blackRedCase = node.isBlack() && !node.left.isNil() && node.left.isRed();
-       /* if (blackRedCase) {
-            ret
-        }*/
+        boolean leftRedCase = node.isBlack() && !node.left.isNil() && node.left.isRed();
+        if (leftRedCase) {
+            return copy(node)
+                    .red()
+                    .left(makeBlack(node.left))
+                    .build();
+        }
+
+        Node right = node.right;
+        boolean leftBlackCase = node.isBlack() && !node.left.isNil() && node.left.isBlack() && !right.isNil();
+        if (leftBlackCase) {
+            if (right.isBlack()) {
+                return balance(copy(node)
+                        .right(copy(right)
+                                .red()
+                                .build())
+                        .build());
+            } else {
+                Node newRoot = right.left;
+                return red(newRoot.key)
+                        .left(copy(node)
+                                .right(newRoot.left)
+                                .build())
+                        .right(balance(
+                                copy(right)
+                                        .black()
+                                        .left(newRoot.right)
+                                        .build()
+                                )
+                        )
+                        .build();
+            }
+        }
         return node;
     }
 
