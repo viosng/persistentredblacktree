@@ -3,6 +3,7 @@ package me.collections.persistent.redblacktree;
 import java.util.Objects;
 
 import static me.collections.persistent.redblacktree.Node.Color.BLACK;
+import static me.collections.persistent.redblacktree.Node.Color.RED;
 
 /**
  * @author nickolaysaveliev
@@ -29,6 +30,14 @@ final class Node {
 
     boolean isNil() {
         return this == nil();
+    }
+
+    boolean isRed() {
+        return this.color == RED;
+    }
+
+    boolean isBlack() {
+        return this.color == BLACK;
     }
 
     @Override
@@ -60,5 +69,43 @@ final class Node {
 
     static Node nil() {
         return NIL;
+    }
+
+    static class Builder {
+        private int key;
+        private Node left = nil(), right = nil();
+        private Color color;
+
+        static Builder black(int key) {
+            return new Builder().key(key).color(BLACK);
+        }
+
+        static Builder red(int key) {
+            return new Builder().key(key).color(RED);
+        }
+
+        Builder key(int key) {
+            this.key = key;
+            return this;
+        }
+
+        Builder left(Node left) {
+            this.left = left;
+            return this;
+        }
+
+        Builder right(Node right) {
+            this.right = right;
+            return this;
+        }
+
+        Builder color(Color color) {
+            this.color = color;
+            return this;
+        }
+
+        Node build() {
+            return new Node(key, left, right, color);
+        }
     }
 }

@@ -1,12 +1,19 @@
 package me.collections.persistent.redblacktree;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 
-import static me.collections.persistent.redblacktree.Node.Color.BLACK;
-import static me.collections.persistent.redblacktree.Node.Color.RED;
+import java.util.concurrent.ThreadLocalRandom;
+import java.util.stream.Stream;
+
+import static me.collections.persistent.redblacktree.Node.Builder.black;
+import static me.collections.persistent.redblacktree.Node.Builder.red;
 import static me.collections.persistent.redblacktree.Node.nil;
 import static me.collections.persistent.redblacktree.PersistentRedBlackTree.balance;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 /**
  * @author nickolaysaveliev
@@ -14,52 +21,139 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  */
 class PersistentRedBlackTreeTest {
 
-    private final Node balanceResult = new Node(2, new Node(1, nil(), nil(), BLACK), new Node(3, nil(), nil(), BLACK), RED);
-
     @Test
-    void balanceLeftLeftCase() {
-        Node x = new Node(1, nil(), nil(), RED);
-        Node y = new Node(2, x, nil(), RED);
-        Node z = new Node(3, y, nil(), BLACK);
-        Node result = balance(z);
-        assertEquals(balanceResult, result);
+    void should_not_validate_red_root() {
+        assertThrows(IllegalStateException.class, () -> new PersistentRedBlackTree(red(1).build()).validate());
     }
 
-    @Test
-    void balanceLeftRightCase() {
-        Node y = new Node(2, nil(), nil(), RED);
-        Node x = new Node(1, nil(), y, RED);
-        Node z = new Node(3, x, nil(), BLACK);
-        Node result = balance(z);
-        assertEquals(balanceResult, result);
+    private static Stream<Node> createRedParentAndChildTests() {
+        return Stream.of(
+                black(4).left(red(3).left(red(1).build()).build()).build(),
+                black(1).right(red(2).right(red(3).build()).build()).build()
+        );
     }
 
-    @Test
-    void balanceRightLeftCase() {
-        Node y = new Node(2, nil(), nil(), RED);
-        Node z = new Node(3, y, nil(), RED);
-        Node x = new Node(1, nil(), z, BLACK);
-        Node result = balance(x);
-        assertEquals(balanceResult, result);
+    @ParameterizedTest
+    @MethodSource("createRedParentAndChildTests")
+    void should_not_validate_red_parent_and_child(Node x) {
+        assertThrows(IllegalStateException.class, () -> PersistentRedBlackTree.checkRedNode(x));
     }
 
-    @Test
-    void balanceRightRightCase() {
-        Node z = new Node(3, nil(), nil(), RED);
-        Node y = new Node(2, nil(), z, RED);
-        Node x = new Node(1, nil(), y, BLACK);
-        Node result = balance(x);
-        assertEquals(balanceResult, result);
+    private static Stream<Node> createDifferentBlackHeightsTests() {
+        return Stream.of(
+                black(1)
+                        .left(black(2).build())
+                        .build(),
+                black(1)
+                        .right(black(2).build())
+                        .build(),
+                black(1)
+                        .left(red(2).build())
+                        .right(black(2).build())
+                        .build(),
+                black(1)
+                        .left(black(2).build())
+                        .right(red(2).build())
+                        .build()
+        );
     }
 
-    @Test
-    void balanceOther() {
-        assertEquals(nil(), balance(nil()));
-        Node z = new Node(3, nil(), nil(), RED);
-        assertEquals(z, balance(z));
-        Node y = new Node(2, nil(), z, RED);
-        assertEquals(y, balance(y));
-        Node x = new Node(1, z, nil(), BLACK);
+    @ParameterizedTest
+    @MethodSource("createDifferentBlackHeightsTests")
+    void should_not_validate_different_black_heights(Node x) {
+        assertThrows(IllegalStateException.class, () -> PersistentRedBlackTree.checkBlackHeight(x));
+    }
+
+    private static Stream<Node> createBrokenBSTTests() {
+        return Stream.of(
+                black(1).left(black(2).build()).build(),
+                black(1).right(black(0).build()).build(),
+                black(1)
+                        .left(red(1).build())
+                        .right(black(0).build())
+                        .build(),
+                black(1)
+                        .left(black(0).build())
+                        .right(red(2).
+                                left(red(3).build())
+                                .build())
+                        .build()
+        );
+    }
+
+    @ParameterizedTest
+    @MethodSource("createBrokenBSTTests")
+    void should_not_validate_broken_bst(Node x) {
+        assertThrows(IllegalStateException.class, () -> PersistentRedBlackTree.checkBST(x));
+    }
+
+    private static Stream<Node> createValidateTests() {
+        return Stream.of(
+                nil(),
+                black(1).build(),
+                black(2)
+                        .left(red(1)
+                                .left(black(0)
+                                        .right(red(0).build())
+                                        .build())
+                                .right(black(1).build())
+                                .build())
+                        .right(black(3).build())
+                        .build(),
+                black(1)
+                    .left(black(1).build())
+                    .right(black(2).build())
+                .build()
+        );
+    }
+
+    @ParameterizedTest
+    @MethodSource("createValidateTests")
+    void should_validate(Node x) {
+        new PersistentRedBlackTree(x).validate();
+    }
+
+    private static Stream<Arguments> createBalanceTests() {
+        return Stream.of(
+                Arguments.of("LeftLeftCase", black(3).left(red(2).left(red(1).build()).build()).build()),
+                Arguments.of("LeftRightCase", black(3).left(red(1).right(red(2).build()).build()).build()),
+                Arguments.of("RightLeftCase", black(1).right(red(3).left(red(2).build()).build()).build()),
+                Arguments.of("RightRightCase", black(1).right(red(2).right(red(3).build()).build()).build())
+        );
+    }
+
+    @ParameterizedTest
+    @MethodSource("createBalanceTests")
+    void should_balance(String caseName, Node x) {
+        Node balanceResult = red(2)
+                .left(black(1).build())
+                .right(black(3).build())
+                .build();
+        assertEquals(balanceResult, balance(x));
+    }
+
+    private static Stream<Node> createBalanceOtherTests() {
+        return Stream.of(
+                nil(),
+                red(3).build(),
+                red(2).right(red(3).build()).build(),
+                black(2).left(red(3).build()).build()
+        );
+    }
+
+    @ParameterizedTest
+    @MethodSource("createBalanceOtherTests")
+    void should_balance_Other(Node x) {
         assertEquals(x, balance(x));
+    }
+
+    @Test
+    void should_insert() {
+        ThreadLocalRandom random = ThreadLocalRandom.current();
+        PersistentRedBlackTree tree = new PersistentRedBlackTree();
+        for (int i = 0; i < 1000; i++) {
+            tree = tree.put(random.nextInt());
+            tree.validate();
+        }
     }
 }
