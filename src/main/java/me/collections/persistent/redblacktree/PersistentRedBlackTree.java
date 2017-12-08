@@ -6,8 +6,8 @@ import java.util.List;
 import java.util.Objects;
 import java.util.function.Consumer;
 
+import static me.collections.persistent.redblacktree.Node.Builder.*;
 import static me.collections.persistent.redblacktree.Node.Color.BLACK;
-import static me.collections.persistent.redblacktree.Node.Color.RED;
 import static me.collections.persistent.redblacktree.Node.nil;
 
 /**
@@ -28,17 +28,17 @@ public class PersistentRedBlackTree implements Iterable<Integer> {
     }
 
     public PersistentRedBlackTree add(int x) {
-        Node newNode = new Node(x, nil(), nil(), RED);
+        Node newNode = red(x).build();
         return new PersistentRedBlackTree(makeBlack(insert(root, newNode)));
     }
 
     static Node insert(Node node, Node newNode) {
         if (node.isNil()) {
             return newNode;
-        } else if (newNode.key < node.key){
-            return balance(new Node(node.key, insert(node.left, newNode), node.right, node.color));
+        } else if (newNode.key < node.key) {
+            return balance(copy(node).left(insert(node.left, newNode)).build());
         } else {
-            return balance(new Node(node.key, node.left, insert(node.right, newNode), node.color));
+            return balance(copy(node).right(insert(node.right, newNode)).build());
         }
     }
 
@@ -47,39 +47,70 @@ public class PersistentRedBlackTree implements Iterable<Integer> {
     }
 
     static Node balance(Node node) {
-        if (!node.isNil() && node.color == BLACK) {
-            boolean leftLeftCase = !node.left.isNil() && node.left.color == RED
-                    && !node.left.left.isNil() && node.left.left.color == RED;
+        if (!node.isNil() && node.isBlack()) {
+            boolean leftLeftCase = !node.left.isNil() && node.left.isRed()
+                    && !node.left.left.isNil() && node.left.left.isRed();
             if (leftLeftCase) {
-                Node left = makeBlack(node.left.left);
-                Node right = new Node(node.key, node.left.right, node.right, BLACK);
-                return new Node(node.left.key, left, right, RED);
+                return red(node.left.key)
+                        .left(makeBlack(node.left.left))
+                        .right(black(node.key)
+                                .left(node.left.right)
+                                .right(node.right)
+                                .build())
+                        .build();
             }
 
-            boolean leftRightCase = !node.left.isNil() && node.left.color == RED
-                    && !node.left.right.isNil() && node.left.right.color == RED;
+            boolean leftRightCase = !node.left.isNil() && node.left.isRed()
+                    && !node.left.right.isNil() && node.left.right.isRed();
             if (leftRightCase) {
-                Node left = new Node(node.left.key, node.left.left, node.left.right.left, BLACK);
-                Node right = new Node(node.key, node.left.right.right, node.right, BLACK);
-                return new Node(node.left.right.key, left, right, RED);
+                return red(node.left.right.key)
+                        .left(black(node.left.key)
+                                .left(node.left.left)
+                                .right(node.left.right.left)
+                                .build())
+                        .right(black(node.key)
+                                .left(node.left.right.right)
+                                .right(node.right)
+                                .build())
+                        .build();
             }
 
-            boolean rightLeftCase = !node.right.isNil() && node.right.color == RED
-                    && !node.right.left.isNil() && node.right.left.color == RED;
+            boolean rightLeftCase = !node.right.isNil() && node.right.isRed()
+                    && !node.right.left.isNil() && node.right.left.isRed();
             if (rightLeftCase) {
-                Node left = new Node(node.key, node.left, node.right.left.left, BLACK);
-                Node right = new Node(node.right.key, node.right.left.right, node.right.right, BLACK);
-                return new Node(node.right.left.key, left, right, RED);
+                return red(node.right.left.key)
+                        .left(black(node.key)
+                                .left(node.left)
+                                .right(node.right.left.left)
+                                .build())
+                        .right(black(node.right.key)
+                                .left(node.right.left.right)
+                                .right(node.right.right)
+                                .build())
+                        .build();
             }
 
-            boolean rightRightCase = !node.right.isNil() && node.right.color == RED
-                    && !node.right.right.isNil() && node.right.right.color == RED;
+            boolean rightRightCase = !node.right.isNil() && node.right.isRed()
+                    && !node.right.right.isNil() && node.right.right.isRed();
             if (rightRightCase) {
-                Node left = new Node(node.key, node.left, node.right.left, BLACK);
-                Node right = makeBlack(node.right.right);
-                return new Node(node.right.key, left, right, RED);
+                return red(node.right.key)
+                        .left(black(node.key)
+                                .left(node.left)
+                                .right(node.right.left)
+                                .build())
+                        .right(makeBlack(node.right.right))
+                        .build();
             }
         }
+        return node;
+    }
+
+    static Node balanceLeft(Node node) {
+        if (node.isNil()) return node;
+        boolean blackRedCase = node.isBlack() && !node.left.isNil() && node.left.isRed();
+       /* if (blackRedCase) {
+            ret
+        }*/
         return node;
     }
 
