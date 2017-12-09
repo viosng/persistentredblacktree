@@ -7,14 +7,15 @@ import org.junit.jupiter.params.provider.MethodSource;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.TreeSet;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static me.collections.persistent.redblacktree.Node.Builder.black;
 import static me.collections.persistent.redblacktree.Node.Builder.red;
 import static me.collections.persistent.redblacktree.Node.nil;
-import static me.collections.persistent.redblacktree.PersistentRedBlackTree.*;
+import static me.collections.persistent.redblacktree.PersistentRedBlackTree.balance;
+import static me.collections.persistent.redblacktree.Validator.validate;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
@@ -60,122 +61,19 @@ class PersistentRedBlackTreeTest {
     @Test
     void should_insert() {
         ThreadLocalRandom random = ThreadLocalRandom.current();
+        List<Integer> list = new ArrayList<>();
         PersistentRedBlackTree tree = new PersistentRedBlackTree();
-        TreeSet<Integer> treeSet = new TreeSet<>();
-        for (int i = 0; i < 1000; i++) {
-            int v = random.nextInt();
-
+        for (int i = 0; i < 3000; i++) {
+            int v = random.nextInt(10) - 5;
             tree = tree.add(v);
-            treeSet.add(v);
+            list.add(v);
 
-            Validator.validate(tree);
+            validate(tree);
 
             List<Integer> persistentTreeList = new ArrayList<>();
             tree.iterator().forEachRemaining(persistentTreeList::add);
 
-            List<Integer> treeSetList = new ArrayList<>();
-            treeSet.iterator().forEachRemaining(treeSetList::add);
-
-            assertEquals(treeSetList, persistentTreeList);
+            assertEquals(list.stream().sorted().collect(Collectors.toList()), persistentTreeList);
         }
-    }
-
-    private static Stream<Arguments> createBalanceLeftTests() {
-        return Stream.of(
-                Arguments.of("ignore empty", nil(), nil()),
-                Arguments.of("ignore red", red(1).right(black(5).build()).build(), red(1).right(black(5).build()).build()),
-                Arguments.of("left is red",
-                        black(1).left(red(1).build()).build(),
-                        red(1).left(black(1).build()).build()
-                ),
-                Arguments.of("right is black",
-                        black(1)
-                                .left(black(2).build())
-                                .right(black(3).build())
-                                .build(),
-                        black(1)
-                                .left(black(2).build())
-                                .right(red(3).build())
-                                .build()
-                ),
-                Arguments.of("right is red",
-                        black(1)
-                                .left(black(2).build())
-                                .right(red(3)
-                                        .left(black(4)
-                                                .left(red(6).build())
-                                                .right(red(7).build())
-                                                .build())
-                                        .right(black(5).build())
-                                        .build())
-                                .build(),
-                        red(4)
-                                .left(black(1)
-                                        .left(black(2).build())
-                                        .right(red(6).build())
-                                        .build())
-                                .right(black(3)
-                                        .left(red(7).build())
-                                        .right(black(5).build())
-                                        .build())
-                                .build()
-                )
-        );
-    }
-
-    @ParameterizedTest
-    @MethodSource("createBalanceLeftTests")
-    void should_balance_left(String caseName, Node target, Node expected) {
-        assertEquals(expected, balanceLeft(target), caseName);
-    }
-
-    private static Stream<Arguments> createBalanceRightTests() {
-        return Stream.of(
-                Arguments.of("ignore empty", nil(), nil()),
-                Arguments.of("ignore red", red(1).right(black(5).build()).build(), red(1).right(black(5).build()).build()),
-                Arguments.of("right is red",
-                        black(1).right(red(1).build()).build(),
-                        red(1).right(black(1).build()).build()
-                ),
-                Arguments.of("left is black",
-                        black(1)
-                                .left(black(2).build())
-                                .right(black(3).build())
-                                .build(),
-                        black(1)
-                                .left(red(2).build())
-                                .right(black(3).build())
-                                .build()
-                ),
-                Arguments.of("left is red",
-                        black(1)
-                                .left(red(2)
-                                        .left(black(4).build())
-                                        .right(black(5)
-                                                .left(red(6).build())
-                                                .right(red(7).build())
-                                                .build())
-
-                                        .build())
-                                .right(black(3).build())
-                                .build(),
-                        red(5)
-                                .left(black(2)
-                                        .left(black(4).build())
-                                        .right(red(6).build())
-                                        .build())
-                                .right(black(1)
-                                        .left(red(7).build())
-                                        .right(black(3).build())
-                                        .build())
-                                .build()
-                )
-        );
-    }
-
-    @ParameterizedTest
-    @MethodSource("createBalanceRightTests")
-    void should_balance_right(String caseName, Node target, Node expected) {
-        assertEquals(expected, balanceRight(target), caseName);
     }
 }

@@ -17,9 +17,9 @@ final class Node {
 
     private static final Node NIL = new Node(0, null, null, BLACK);
 
-    final int key;
-    final Node left, right;
-    final Color color;
+    private final int key;
+    private final Node left, right;
+    private final Color color;
 
     Node(int key, Node left, Node right, Color color) {
         this.key = key;
@@ -38,6 +38,18 @@ final class Node {
 
     boolean isBlack() {
         return this.color == BLACK;
+    }
+
+    int key() {
+        return key;
+    }
+
+    Node left() {
+        return this == nil() ? nil() : left;
+    }
+
+    Node right() {
+        return this == nil() ? nil() : right;
     }
 
     @Override
@@ -79,6 +91,7 @@ final class Node {
         private Color color;
 
         static Builder copy(Node node) {
+            if (node.isNil()) throw new UnsupportedOperationException();
             return new Builder().key(node.key).left(node.left).right(node.right).color(node.color);
         }
 
