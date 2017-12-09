@@ -1,6 +1,5 @@
 package me.collections.persistent.redblacktree;
 
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 
@@ -16,11 +15,6 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
  * @since 08/12/2017
  */
 class ValidatorTest {
-
-    @Test
-    void should_not_validate_red_root() {
-        assertThrows(IllegalStateException.class, () -> Validator.validate(new PersistentRedBlackTree(red(1).build())));
-    }
 
     private static Stream<Node> createRedParentAndChildTests() {
         return Stream.of(

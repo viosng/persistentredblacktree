@@ -22,6 +22,7 @@ final class Node {
     }
 
     private static final Node NIL = new Node(0, null, null, BLACK);
+    private static final Node DOUBLE_NIL = new Node(0, null, null, DOUBLE_BLACK);
 
     private final int key;
     private final Node left, right;
@@ -86,8 +87,6 @@ final class Node {
         return Objects.hash(key, left, right, color);
     }
 
-
-
     @Override
     public String toString() {
         return this == nil()
@@ -101,6 +100,10 @@ final class Node {
 
     static Node nil() {
         return NIL;
+    }
+
+    static Node doubleNil() {
+        return DOUBLE_NIL;
     }
 
     static class Builder {

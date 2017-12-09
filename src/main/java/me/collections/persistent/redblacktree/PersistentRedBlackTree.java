@@ -124,6 +124,122 @@ public class PersistentRedBlackTree implements Iterable<Integer> {
         return node;
     }
 
+    static Node rotate(Node node) {
+        Node left = node.left();
+        Node right = node.right();
+        if (node.isRed()) {
+            // R (T BB a x b) y (T B c z d) = balance B (T R (T B a x b) y c) z d
+            if (!left.isNil() && left.isDoubleBlack() && !right.isNil() && right.isBlack()) {
+                return balance(
+                        copy(right)
+                                .left(red(node.key())
+                                        .left(copy(left)
+                                                .black()
+                                                .build())
+                                        .right(right.left())
+                                        .build()
+                                )
+                                .build()
+                );
+            }
+            //  R EE y (T B c z d) = balance B (T R E y c) z d
+            if (left.isNil() && left.isDoubleBlack() && !right.isNil() && right.isBlack()) {
+                return balance(
+                        copy(right)
+                                .left(red(node.key())
+                                        .right(right.left())
+                                        .build())
+                                .build()
+                );
+            }
+            // R (T B a x b) y (T BB c z d) = balance B a x (T R b y (T B c z d))
+            if (!left.isNil() && left.isBlack() && !right.isNil() && right.isDoubleBlack()) {
+                return balance(
+                        copy(left)
+                                .right(red(node.key())
+                                        .left(left.right())
+                                        .right(copy(right)
+                                                .black()
+                                                .build())
+                                        .build()
+                                )
+                                .build()
+                );
+            }
+            // R (T B a x b) y EE = balance B a x (T R b y E)
+            if (!left.isNil() && left.isBlack() && right.isNil() && right.isDoubleBlack()) {
+                return balance(
+                        copy(left)
+                                .right(red(node.key())
+                                        .left(left.right())
+                                        .build())
+                                .build()
+                );
+            }
+        } else if (!node.isNil() && node.isBlack()) {
+            // B (T BB a x b) y (T B c z d) = balance BB (T R (T B a x b) y c) z d
+            if (!left.isNil() && left.isDoubleBlack() && !right.isNil() && right.isBlack()) {
+                return balance(
+                        copy(right)
+                                .doubleBlack()
+                                .left(red(node.key())
+                                        .left(copy(left)
+                                                .black()
+                                                .build())
+                                        .right(right.left())
+                                        .build())
+                                .build()
+                );
+            }
+            // B EE y (T B c z d) = balance BB (T R E y c) z d
+            if (left.isNil() && left.isDoubleBlack() && !right.isNil() && right.isBlack()) {
+                return balance(
+                        copy(right)
+                                .doubleBlack()
+                                .left(red(node.key())
+                                        .right(right.left())
+                                        .build())
+                                .build()
+                );
+            }
+            // B (T B a x b) y (T BB c z d) = balance BB a x (T R b y (T B c z d))
+            if (!left.isNil() && left.isBlack() && !right.isNil() && right.isDoubleBlack()) {
+                return balance(
+                        copy(left)
+                                .doubleBlack()
+                                .right(red(node.key())
+                                        .left(left.right())
+                                        .right(copy(right)
+                                                .black()
+                                                .build())
+                                        .build())
+                                .build()
+                );
+            }
+            // B (T B a x b) y EE = balance BB a x (T R b y E)
+            if (!left.isNil() && left.isBlack() && right.isNil() && right.isDoubleBlack()) {
+                return balance(
+                        copy(left)
+                                .doubleBlack()
+                                .right(red(node.key())
+                                        .left(left.right())
+                                        .build())
+                                .build()
+                );
+            }
+            // B (T BB a w b) x (T R (T B c y d) z e) = T B (balance B (T R (T B a w b) x c) y d) z e
+            if (!left.isNil() && left.isDoubleBlack() && !right.isNil() && right.isRed() && !right.left().isNil() && right.left().isBlack()) {
+                return black(right.key())
+                        .left(balance(
+
+                        ))
+                        .right(right.right())
+                        .build()
+            }
+        }
+        return node;
+    }
+
     private static void inOrderTraverse(Node root, Consumer<Node> nodeConsumer) {
         if (root.isNil()) return;
         inOrderTraverse(root.left(), nodeConsumer);

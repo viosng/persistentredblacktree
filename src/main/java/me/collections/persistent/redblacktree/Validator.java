@@ -11,9 +11,6 @@ public class Validator {
 
     public static void validate(PersistentRedBlackTree tree) {
         if (tree.root.isNil()) return;
-        if (tree.root.isRed()) {
-            throw new IllegalStateException("Root is RED:" + tree.root);
-        }
         checkRedNode(tree.root);
         checkBlackHeight(tree.root);
         checkBST(tree.root);
