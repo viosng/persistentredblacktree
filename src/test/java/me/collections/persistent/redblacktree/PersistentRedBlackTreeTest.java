@@ -11,8 +11,7 @@ import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static me.collections.persistent.redblacktree.Node.Builder.black;
-import static me.collections.persistent.redblacktree.Node.Builder.red;
+import static me.collections.persistent.redblacktree.Node.Builder.*;
 import static me.collections.persistent.redblacktree.Node.nil;
 import static me.collections.persistent.redblacktree.PersistentRedBlackTree.balance;
 import static me.collections.persistent.redblacktree.Validator.validate;
@@ -24,7 +23,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  */
 class PersistentRedBlackTreeTest {
 
-    private static Stream<Arguments> createBalanceTests() {
+    private static Stream<Arguments> createBalanceBlackTests() {
         return Stream.of(
                 Arguments.of("LeftLeftCase", black(3).left(red(2).left(red(1).build()).build()).build()),
                 Arguments.of("LeftRightCase", black(3).left(red(1).right(red(2).build()).build()).build()),
@@ -34,9 +33,26 @@ class PersistentRedBlackTreeTest {
     }
 
     @ParameterizedTest
-    @MethodSource("createBalanceTests")
-    void should_balance(String caseName, Node x) {
+    @MethodSource("createBalanceBlackTests")
+    void should_balance_black(String caseName, Node x) {
         Node balanceResult = red(2)
+                .left(black(1).build())
+                .right(black(3).build())
+                .build();
+        assertEquals(balanceResult, balance(x), caseName);
+    }
+
+    private static Stream<Arguments> createBalanceDoubleBlackTests() {
+        return Stream.of(
+                Arguments.of("LeftRightCase", doubleBlack(3).left(red(1).right(red(2).build()).build()).build()),
+                Arguments.of("RightLeftCase", doubleBlack(1).right(red(3).left(red(2).build()).build()).build())
+        );
+    }
+
+    @ParameterizedTest
+    @MethodSource("createBalanceDoubleBlackTests")
+    void should_balance_double_black(String caseName, Node x) {
+        Node balanceResult = black(2)
                 .left(black(1).build())
                 .right(black(3).build())
                 .build();

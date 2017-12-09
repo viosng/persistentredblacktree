@@ -6,8 +6,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.function.Consumer;
 
-import static me.collections.persistent.redblacktree.Node.Builder.copy;
-import static me.collections.persistent.redblacktree.Node.Builder.red;
+import static me.collections.persistent.redblacktree.Node.Builder.*;
 import static me.collections.persistent.redblacktree.Node.nil;
 
 /**
@@ -87,6 +86,38 @@ public class PersistentRedBlackTree implements Iterable<Integer> {
                                 .right(node.right().left())
                                 .build())
                         .right(makeBlack(node.right().right()))
+                        .build();
+            }
+        }
+        if (!node.isNil() && node.isDoubleBlack()) {
+            boolean doubleBlackLeftRightCase = node.left().isRed() && node.left().right().isRed();
+            if (doubleBlackLeftRightCase) {
+                return black(node.left().right().key())
+                        .left(black(node.left().key())
+                                .left(node.left().left())
+                                .right(node.left().right().left())
+                                .build()
+                        )
+                        .right(black(node.key())
+                                .left(node.left().right().right())
+                                .right(node.right())
+                                .build()
+                        )
+                        .build();
+            }
+            boolean doubleBlackRightLeftCase = node.right().isRed() && node.right().left().isRed();
+            if (doubleBlackRightLeftCase) {
+                return black(node.right().left().key())
+                        .left(black(node.key())
+                                .left(node.left())
+                                .right(node.right().left().left())
+                                .build()
+                        )
+                        .right(black(node.right().key())
+                                .left(node.right().left().right())
+                                .right(node.right().right())
+                                .build()
+                        )
                         .build();
             }
         }

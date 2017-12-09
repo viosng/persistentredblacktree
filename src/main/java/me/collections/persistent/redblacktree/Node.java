@@ -2,8 +2,8 @@ package me.collections.persistent.redblacktree;
 
 import java.util.Objects;
 
-import static me.collections.persistent.redblacktree.Node.Color.BLACK;
-import static me.collections.persistent.redblacktree.Node.Color.RED;
+import static me.collections.persistent.redblacktree.Node.Builder.copy;
+import static me.collections.persistent.redblacktree.Node.Color.*;
 
 /**
  * @author nickolaysaveliev
@@ -12,7 +12,13 @@ import static me.collections.persistent.redblacktree.Node.Color.RED;
 final class Node {
 
     enum Color {
-        RED, BLACK
+        RED("R"), BLACK("B"), DOUBLE_BLACK("BB");
+
+        final String name;
+
+        Color(String name) {
+            this.name = name;
+        }
     }
 
     private static final Node NIL = new Node(0, null, null, BLACK);
@@ -40,6 +46,10 @@ final class Node {
         return this.color == BLACK;
     }
 
+    boolean isDoubleBlack() {
+        return this.color == DOUBLE_BLACK;
+    }
+
     int key() {
         return key;
     }
@@ -50,6 +60,14 @@ final class Node {
 
     Node right() {
         return this == nil() ? nil() : right;
+    }
+
+    Node blacken() {
+        return this.isRed() ? copy(this).black().build() : this;
+    }
+
+    Node redden() {
+        return !isNil() && isBlack() && left.isBlack() && right.isBlack() ? copy(this).red().build() : this;
     }
 
     @Override
@@ -74,7 +92,7 @@ final class Node {
     public String toString() {
         return this == nil()
                 ? "NIL"
-                : color + "{" +
+                : color.name + "{" +
                     "key=" + key +
                     ", left=" + left +
                     ", right=" + right +
@@ -101,6 +119,10 @@ final class Node {
 
         static Builder red(int key) {
             return new Builder().key(key).red();
+        }
+
+        static Builder doubleBlack(int key) {
+            return new Builder().key(key).doubleBlack();
         }
 
         Builder key(int key) {
@@ -130,6 +152,11 @@ final class Node {
 
         Builder black() {
             this.color = BLACK;
+            return this;
+        }
+
+        Builder doubleBlack() {
+            this.color = DOUBLE_BLACK;
             return this;
         }
 
