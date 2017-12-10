@@ -71,6 +71,10 @@ final class Node {
         return !isNil() && isBlack() && left.isBlack() && right.isBlack() ? copy(this).red().build() : this;
     }
 
+    Node demote() {
+        return isDoubleBlack() ? (isNil() ? nil() : copy(this).black().build()) : this;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
