@@ -130,7 +130,7 @@ public class PersistentRedBlackTree implements Iterable<Integer> {
         if (node.isRed()) {
             // R (T BB a x b) y (T B c z d) = balance B (T R (T B a x b) y c) z d
             // R EE           y (T B c z d) = balance B (T R E y c) z d
-            if (left.isDoubleBlack() && !right.isNil() && right.isBlack()) {
+            if (left.isDoubleBlack() && right.isBlackNode()) {
                 return balance(
                         copy(right)
                                 .left(red(node.key())
@@ -143,7 +143,7 @@ public class PersistentRedBlackTree implements Iterable<Integer> {
             }
             // R (T B a x b) y (T BB c z d) = balance B a x (T R b y (T B c z d))
             // R (T B a x b) y EE           = balance B a x (T R b y E)
-            if (!left.isNil() && left.isBlack() && right.isDoubleBlack()) {
+            if (left.isBlackNode() && right.isDoubleBlack()) {
                 return balance(
                         copy(left)
                                 .right(red(node.key())
@@ -154,10 +154,10 @@ public class PersistentRedBlackTree implements Iterable<Integer> {
                                 .build()
                 );
             }
-        } else if (!node.isNil() && node.isBlack()) {
+        } else if (node.isBlackNode()) {
             // B (T BB a x b) y (T B c z d) = balance BB (T R (T B a x b) y c) z d
             // B EE           y (T B c z d) = balance BB (T R E y c) z d
-            if (left.isDoubleBlack() && !right.isNil() && right.isBlack()) {
+            if (left.isDoubleBlack() && right.isBlackNode()) {
                 return balance(
                         copy(right)
                                 .doubleBlack()
@@ -170,7 +170,7 @@ public class PersistentRedBlackTree implements Iterable<Integer> {
             }
             // B (T B a x b) y (T BB c z d) = balance BB a x (T R b y (T B c z d))
             // B (T B a x b) y EE           = balance BB a x (T R b y E)
-            if (!left.isNil() && left.isBlack() && right.isDoubleBlack()) {
+            if (left.isBlackNode() && right.isDoubleBlack()) {
                 return balance(
                         copy(left)
                                 .doubleBlack()
@@ -183,7 +183,7 @@ public class PersistentRedBlackTree implements Iterable<Integer> {
             }
             // B (T BB a w b) x (T R (T B c y d) z e) = T B (balance B (T R (T B a w b) x c) y d) z e
             // B EE           x (T R (T B c y d) z e) = T B (balance B (T R E x c) y d) z e
-            if (left.isDoubleBlack() && right.isRed() && !right.left().isNil() && right.left().isBlack()) {
+            if (left.isDoubleBlack() && right.isRed() && right.left().isBlackNode()) {
                 return black(right.key())
                         .left(balance(
                                 copy(right.left())
@@ -199,7 +199,7 @@ public class PersistentRedBlackTree implements Iterable<Integer> {
             }
             // B (T R a w (T B b x c)) y (T BB d z e) = T B a w (balance B b x (T R c y (T B d z e)))
             // B (T R a w (T B b x c)) y EE           = T B a w (balance B b x (T R c y E))
-            if (left.isRed() && !left.right().isNil() && left.right().isBlack() && right.isDoubleBlack()) {
+            if (left.isRed() && left.right().isBlackNode() && right.isDoubleBlack()) {
                 return copy(left)
                         .black()
                         .right(balance(
@@ -213,7 +213,6 @@ public class PersistentRedBlackTree implements Iterable<Integer> {
                         )
                         .build();
             }
-
         }
         return node;
     }

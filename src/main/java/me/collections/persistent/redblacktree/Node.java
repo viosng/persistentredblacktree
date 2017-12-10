@@ -47,6 +47,10 @@ final class Node {
         return this.color == BLACK;
     }
 
+    boolean isBlackNode() {
+        return !isNil() && isBlack();
+    }
+
     boolean isDoubleBlack() {
         return this.color == DOUBLE_BLACK;
     }
