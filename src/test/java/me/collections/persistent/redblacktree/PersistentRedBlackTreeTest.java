@@ -1,5 +1,6 @@
 package me.collections.persistent.redblacktree;
 
+import me.collections.util.Pair;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -7,6 +8,7 @@ import org.junit.jupiter.params.provider.MethodSource;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.TreeSet;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -14,10 +16,10 @@ import java.util.stream.Stream;
 import static me.collections.persistent.redblacktree.Node.Builder.*;
 import static me.collections.persistent.redblacktree.Node.doubleNil;
 import static me.collections.persistent.redblacktree.Node.nil;
-import static me.collections.persistent.redblacktree.PersistentRedBlackTree.balance;
-import static me.collections.persistent.redblacktree.PersistentRedBlackTree.rotate;
+import static me.collections.persistent.redblacktree.PersistentRedBlackTree.*;
 import static me.collections.persistent.redblacktree.Validator.validate;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 /**
  * @author nickolaysaveliev
@@ -273,4 +275,38 @@ class PersistentRedBlackTreeTest {
         assertEquals(x, rotate(x));
     }
 
+    @Test
+    void should_find_min_and_remove() {
+        assertThrows(IllegalArgumentException.class, () -> minRemove(nil()));
+        assertThrows(IllegalArgumentException.class, () -> minRemove(doubleNil()));
+        assertEquals(Pair.of(1, nil()), minRemove(red(1).build()));
+        assertEquals(Pair.of(1, doubleNil()), minRemove(black(1).build()));
+        assertEquals(Pair.of(1, black(2).build()), minRemove(black(1).right(red(2).build()).build()));
+
+        Node node = black(3)
+                .left(black(1).right(red(2).build()).build())
+                .right(black(4).build())
+                .build();
+        assertEquals(Pair.of(1, copy(node).left(black(2).build()).build()), minRemove(node));
+
+        TreeSet<Integer> treeSet = new TreeSet<>();
+        ThreadLocalRandom random = ThreadLocalRandom.current();
+        PersistentRedBlackTree tree = new PersistentRedBlackTree();
+        for (int i = 0; i < 1000; i++) {
+            int v = random.nextInt();
+            while(treeSet.contains(v)) {
+                v = random.nextInt();
+            }
+            tree = tree.add(v);
+            treeSet.add(v);
+        }
+        while(!treeSet.isEmpty()) {
+            Integer v = treeSet.pollFirst();
+            tree = new PersistentRedBlackTree(tree.root.redden()); // emulate deletion
+            Pair<Integer, PersistentRedBlackTree> pair = tree.minRemove();
+            assertEquals(v, pair.getKey());
+            tree = pair.getValue();
+            validate(tree);
+        }
+    }
 }

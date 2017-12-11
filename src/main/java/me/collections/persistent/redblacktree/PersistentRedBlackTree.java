@@ -1,5 +1,7 @@
 package me.collections.persistent.redblacktree;
 
+import me.collections.util.Pair;
+
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -7,6 +9,7 @@ import java.util.Objects;
 import java.util.function.Consumer;
 
 import static me.collections.persistent.redblacktree.Node.Builder.*;
+import static me.collections.persistent.redblacktree.Node.doubleNil;
 import static me.collections.persistent.redblacktree.Node.nil;
 
 /**
@@ -29,6 +32,11 @@ public class PersistentRedBlackTree implements Iterable<Integer> {
     public PersistentRedBlackTree add(int x) {
         Node newNode = red(x).build();
         return new PersistentRedBlackTree(makeBlack(insert(root, newNode)));
+    }
+
+    public Pair<Integer, PersistentRedBlackTree> minRemove() {
+        Pair<Integer, Node> pair = minRemove(root);
+        return Pair.of(pair.getKey(), new PersistentRedBlackTree(pair.getValue()));
     }
 
     static Node insert(Node node, Node newNode) {
@@ -215,6 +223,24 @@ public class PersistentRedBlackTree implements Iterable<Integer> {
             }
         }
         return node;
+    }
+
+    static Pair<Integer, Node> minRemove(Node node) {
+        if (node.isNil() || node.isDoubleNil()) {
+            throw new IllegalArgumentException("Empty tree");
+        }
+        if (node.isRed() && node.left().isNil() && node.right().isNil()) {
+            return Pair.of(node.key(), nil());
+        }
+        if (node.isBlackNode() && node.left().isNil() && node.right().isNil()) {
+            return Pair.of(node.key(), doubleNil());
+        }
+        if (node.isBlackNode() && node.left().isNil()
+                && node.right().isRed() && node.right().left().isNil() && node.right().right().isNil()) {
+            return Pair.of(node.key(), node.right().blacken());
+        }
+        Pair<Integer, Node> leftMin = minRemove(node.left());
+        return Pair.of(leftMin.getKey(), rotate(copy(node).left(leftMin.getValue()).build()));
     }
 
     private static void inOrderTraverse(Node root, Consumer<Node> nodeConsumer) {

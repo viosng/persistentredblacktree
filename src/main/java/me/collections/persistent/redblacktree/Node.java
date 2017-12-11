@@ -39,6 +39,10 @@ final class Node {
         return this == nil();
     }
 
+    boolean isDoubleNil() {
+        return this == doubleNil();
+    }
+
     boolean isRed() {
         return this.color == RED;
     }
@@ -76,7 +80,7 @@ final class Node {
     }
 
     Node demote() {
-        return isDoubleBlack() ? (isNil() ? nil() : copy(this).black().build()) : this;
+        return isDoubleBlack() ? (isDoubleNil() ? nil() : copy(this).black().build()) : this;
     }
 
     @Override
@@ -97,13 +101,13 @@ final class Node {
 
     @Override
     public String toString() {
-        return this == nil()
-                ? "NIL"
-                : color.name + "{" +
-                    "key=" + key +
-                    ", left=" + left +
-                    ", right=" + right +
-                    '}';
+        if (this.isNil()) return "NIL";
+        if (this.isDoubleNil()) return "DOUBLE_NIL";
+        return color.name + "{" +
+                "key=" + key +
+                ", left=" + left +
+                ", right=" + right +
+                '}';
     }
 
     static Node nil() {
