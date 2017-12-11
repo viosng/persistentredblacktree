@@ -39,6 +39,10 @@ public class PersistentRedBlackTree implements Iterable<Integer> {
         return Pair.of(pair.getKey(), new PersistentRedBlackTree(pair.getValue()));
     }
 
+    public PersistentRedBlackTree remove(int x) {
+        return new PersistentRedBlackTree(delete(root.redden(), x));
+    }
+
     static Node insert(Node node, Node newNode) {
         if (node.isNil()) {
             return newNode;
@@ -243,6 +247,51 @@ public class PersistentRedBlackTree implements Iterable<Integer> {
         return Pair.of(leftMin.getKey(), rotate(copy(node).left(leftMin.getValue()).build()));
     }
 
+    static Node delete(Node node, int x) {
+        if (node.isNil()) return node;
+        Node left = node.left();
+        Node right = node.right();
+        int key = node.key();
+        if (node.isRed() && left.isNil() && right.isNil()) {
+            return key == x ? nil() : node;
+        }
+        if (node.isBlackNode() && left.isNil() && right.isNil()) {
+            return key == x ? doubleNil() : node;
+        }
+        if (node.isBlackNode() && left.isRed() && left.left().isNil() && left.right().isNil() && right.isNil()) {
+            if (x < key) {
+                return copy(node)
+                        .left(delete(left, x))
+                        .build();
+            } else if (x == key) {
+                return left.blacken();
+            } else {
+                return node;
+            }
+        }
+        if (x < key) {
+            return rotate(
+                    copy(node)
+                            .left(delete(left, x))
+                            .build()
+            );
+        } else if (x == key) {
+            Pair<Integer, Node> pair = minRemove(right);
+            return rotate(
+                    copy(node)
+                            .key(pair.getKey())
+                            .right(pair.getValue())
+                            .build()
+            );
+        } else {
+            return rotate(
+                    copy(node)
+                            .right(delete(right, x))
+                            .build()
+            );
+        }
+    }
+
     private static void inOrderTraverse(Node root, Consumer<Node> nodeConsumer) {
         if (root.isNil()) return;
         inOrderTraverse(root.left(), nodeConsumer);
@@ -286,6 +335,12 @@ public class PersistentRedBlackTree implements Iterable<Integer> {
                 return iterator.next();
             }
         };
+    }
+
+    public List<Integer> asList() {
+        List<Integer> list = new ArrayList<>();
+        iterator().forEachRemaining(list::add);
+        return list;
     }
 
     private static Node makeBlack(Node node) {

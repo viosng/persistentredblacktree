@@ -7,6 +7,7 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.TreeSet;
 import java.util.concurrent.ThreadLocalRandom;
@@ -19,12 +20,14 @@ import static me.collections.persistent.redblacktree.Node.nil;
 import static me.collections.persistent.redblacktree.PersistentRedBlackTree.*;
 import static me.collections.persistent.redblacktree.Validator.validate;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 /**
  * @author nickolaysaveliev
  * @since 08/12/2017
  */
+@SuppressWarnings("Duplicates")
 class PersistentRedBlackTreeTest {
 
     private static Stream<Arguments> createBalanceBlackTests() {
@@ -90,10 +93,7 @@ class PersistentRedBlackTreeTest {
 
             validate(tree);
 
-            List<Integer> persistentTreeList = new ArrayList<>();
-            tree.iterator().forEachRemaining(persistentTreeList::add);
-
-            assertEquals(list.stream().sorted().collect(Collectors.toList()), persistentTreeList);
+            assertEquals(list.stream().sorted().collect(Collectors.toList()), tree.asList());
         }
     }
 
@@ -289,17 +289,9 @@ class PersistentRedBlackTreeTest {
                 .build();
         assertEquals(Pair.of(1, copy(node).left(black(2).build()).build()), minRemove(node));
 
-        TreeSet<Integer> treeSet = new TreeSet<>();
-        ThreadLocalRandom random = ThreadLocalRandom.current();
-        PersistentRedBlackTree tree = new PersistentRedBlackTree();
-        for (int i = 0; i < 1000; i++) {
-            int v = random.nextInt();
-            while(treeSet.contains(v)) {
-                v = random.nextInt();
-            }
-            tree = tree.add(v);
-            treeSet.add(v);
-        }
+        Pair<TreeSet<Integer>, PersistentRedBlackTree> treePair = fillTrees(1000);
+        TreeSet<Integer> treeSet = treePair.getKey();
+        PersistentRedBlackTree tree = treePair.getValue();
         while(!treeSet.isEmpty()) {
             Integer v = treeSet.pollFirst();
             tree = new PersistentRedBlackTree(tree.root.redden()); // emulate deletion
@@ -308,5 +300,100 @@ class PersistentRedBlackTreeTest {
             tree = pair.getValue();
             validate(tree);
         }
+    }
+
+    @Test
+    void should_delete() {
+        assertEquals(nil(), delete(nil(), 1));
+
+        assertEquals(nil(), delete(red(1).build(), 1));
+
+        assertEquals(red(1).build(), delete(red(1).build(), 2));
+        assertEquals(doubleNil(), delete(black(1).build(), 1));
+        assertEquals(black(1).build(), delete(black(1).build(), 2));
+
+        Node node1 = black(2).left(red(1).build()).build();
+        assertEquals(black(2).build(), delete(node1, 1));
+        assertEquals(black(1).build(), delete(node1, 2));
+        assertEquals(node1, delete(node1, 3));
+
+        Node node2 = black(2).left(red(1).build()).right(black(3).build()).build();
+        assertEquals(black(2).right(black(3).build()).build(), delete(node2, 1));
+        assertEquals(black(3).left(red(1).build()).right(doubleNil()).build(), delete(node2, 2));
+        assertEquals(black(2).left(red(1).build()).right(doubleNil()).build(), delete(node2, 3));
+
+        Node node3 = black(2).left(red(1).build()).right(red(3).build()).build();
+        assertEquals(black(2).right(red(3).build()).build(), delete(node3, 1));
+        assertEquals(black(3).left(red(1).build()).right(nil()).build(), delete(node3, 2));
+        assertEquals(black(2).left(red(1).build()).right(nil()).build(), delete(node3, 3));
+    }
+
+    @Test
+    void should_remove() {
+        assertEquals(new PersistentRedBlackTree(), new PersistentRedBlackTree().remove(1));
+        assertEquals(new PersistentRedBlackTree(), new PersistentRedBlackTree(red(1).build()).remove(1));
+        assertEquals(new PersistentRedBlackTree(red(1).build()), new PersistentRedBlackTree(red(1).build()).remove(2));
+        assertEquals(new PersistentRedBlackTree(), new PersistentRedBlackTree(black(1).build()).remove(1));
+        assertEquals(new PersistentRedBlackTree(red(1).build()), new PersistentRedBlackTree(black(1).build()).remove(2));
+        assertEquals(new PersistentRedBlackTree(black(3).build()), new PersistentRedBlackTree(black(1).build())
+                .remove(1).add(2).add(3).remove(3).remove(1).remove(2).remove(100500).add(3));
+    }
+
+    @Test
+    void should_remove_min() {
+        Pair<TreeSet<Integer>, PersistentRedBlackTree> pair = fillTrees(1000);
+        TreeSet<Integer> treeSet = pair.getKey();
+        PersistentRedBlackTree tree = pair.getValue();
+        while(!treeSet.isEmpty()) {
+            Integer v = treeSet.pollFirst();
+            PersistentRedBlackTree newTree = tree.remove(v);
+            assertNotEquals(tree, newTree);
+            validate(newTree);
+            tree = newTree;
+        }
+    }
+
+    @Test
+    void should_remove_random() {
+        ThreadLocalRandom random = ThreadLocalRandom.current();
+        PersistentRedBlackTree tree = new PersistentRedBlackTree();
+        List<Integer> values = new ArrayList<>();
+        for (int i = 0; i < 1000; i++) {
+            int v = random.nextInt();
+            tree = tree.add(v);
+            values.add(v);
+        }
+
+        int n = values.size();
+        while (n > 0) {
+            int index = random.nextInt(n);
+            Collections.swap(values, index, n - 1);
+            int v = values.get(n - 1);
+            PersistentRedBlackTree newTree = tree.remove(v);
+            assertNotEquals(tree, newTree);
+
+            assertEquals(values.subList(0, n - 1).stream().sorted().collect(Collectors.toList()), newTree.asList());
+
+            validate(newTree);
+            tree = newTree;
+            n--;
+        }
+
+        assertEquals(new PersistentRedBlackTree(), tree);
+    }
+
+    private static Pair<TreeSet<Integer>, PersistentRedBlackTree> fillTrees(int n) {
+        TreeSet<Integer> treeSet = new TreeSet<>();
+        ThreadLocalRandom random = ThreadLocalRandom.current();
+        PersistentRedBlackTree tree = new PersistentRedBlackTree();
+        for (int i = 0; i < n; i++) {
+            int v = random.nextInt();
+            while(treeSet.contains(v)) {
+                v = random.nextInt();
+            }
+            tree = tree.add(v);
+            treeSet.add(v);
+        }
+        return Pair.of(treeSet, tree);
     }
 }
