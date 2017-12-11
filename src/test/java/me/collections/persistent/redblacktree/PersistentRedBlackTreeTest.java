@@ -381,7 +381,6 @@ class PersistentRedBlackTreeTest {
     void should_add_and_remove() {
         ThreadLocalRandom random = ThreadLocalRandom.current();
         PersistentRedBlackTree tree = new PersistentRedBlackTree();
-        Set<Integer> set = new HashSet<>();
         ArrayList<Integer> values = new ArrayList<>();
         int operationsCount = 10000;
         double border = 0.5, step = 0.01;
@@ -391,11 +390,7 @@ class PersistentRedBlackTreeTest {
             if (values.isEmpty() || randDouble > border) {
                 border -= step;
 
-                int v = random.nextInt();
-                while(set.contains(v)) {
-                    v = random.nextInt();
-                }
-                set.add(v);
+                int v = random.nextInt(1000);
                 newTree = tree.add(v);
                 values.add(v);
 
@@ -404,8 +399,8 @@ class PersistentRedBlackTreeTest {
                 border += step;
 
                 int v = values.remove(random.nextInt(values.size()));
-                set.remove(v);
                 newTree = tree.remove(v);
+
                 if (border > 0.9) border = 0.5;
             }
 
