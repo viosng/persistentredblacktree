@@ -6,10 +6,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.TreeSet;
+import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -19,9 +16,7 @@ import static me.collections.persistent.redblacktree.Node.doubleNil;
 import static me.collections.persistent.redblacktree.Node.nil;
 import static me.collections.persistent.redblacktree.PersistentRedBlackTree.*;
 import static me.collections.persistent.redblacktree.Validator.validate;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * @author nickolaysaveliev
@@ -380,6 +375,46 @@ class PersistentRedBlackTreeTest {
         }
 
         assertEquals(new PersistentRedBlackTree(), tree);
+    }
+
+    @Test
+    void should_add_and_remove() {
+        ThreadLocalRandom random = ThreadLocalRandom.current();
+        PersistentRedBlackTree tree = new PersistentRedBlackTree();
+        Set<Integer> set = new HashSet<>();
+        ArrayList<Integer> values = new ArrayList<>();
+        int operationsCount = 10000;
+        double border = 0.5, step = 0.01;
+        while (operationsCount-- > 0) {
+            double randDouble = random.nextDouble();
+            PersistentRedBlackTree newTree;
+            if (values.isEmpty() || randDouble > border) {
+                border -= step;
+
+                int v = random.nextInt();
+                while(set.contains(v)) {
+                    v = random.nextInt();
+                }
+                set.add(v);
+                newTree = tree.add(v);
+                values.add(v);
+
+                if (border < 0.1) border = 0.5;
+            } else {
+                border += step;
+
+                int v = values.remove(random.nextInt(values.size()));
+                set.remove(v);
+                newTree = tree.remove(v);
+                if (border > 0.9) border = 0.5;
+            }
+
+            assertNotEquals(tree, newTree);
+            assertEquals(values.stream().sorted().collect(Collectors.toList()), newTree.asList());
+            validate(newTree);
+
+            tree = newTree;
+        }
     }
 
     private static Pair<TreeSet<Integer>, PersistentRedBlackTree> fillTrees(int n) {
