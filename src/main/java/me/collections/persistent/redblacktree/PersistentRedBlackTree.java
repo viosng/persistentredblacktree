@@ -304,24 +304,26 @@ public class PersistentRedBlackTree<K extends Comparable<K>> implements Iterable
         if (node.isBlackNode() && left.isNil() && right.isNil()) {
             return key.equals(x) ? doubleNil() : node;
         }
+
+        int compare = comparator.compare(x, key);
         if (node.isBlackNode() && left.isRed() && left.left().isNil() && left.right().isNil() && right.isNil()) {
-            if (comparator.compare(x, key) < 0) {
+            if (compare < 0) {
                 return copy(node)
                         .left(delete(left, x, comparator))
                         .build();
-            } else if (key.equals(x)) {
+            } else if (compare == 0) {
                 return left.blacken();
             } else {
                 return node;
             }
         }
-        if (comparator.compare(x, key) < 0) {
+        if (compare < 0) {
             return rotate(
                     copy(node)
                             .left(delete(left, x, comparator))
                             .build()
             );
-        } else if (key.equals(x)) {
+        } else if (compare == 0) {
             Pair<K1, Node<K1>> pair = minRemove(right);
             return rotate(
                     copy(node)
