@@ -43,6 +43,15 @@ public class PersistentRedBlackTree implements Iterable<Integer> {
         return new PersistentRedBlackTree(delete(root.redden(), x));
     }
 
+    public boolean contains(int x) {
+        Node node = root;
+        while (!node.isNil() && !node.isDoubleNil()) {
+            if (x == node.key()) return true;
+            node = x < node.key() ? node.left() : node.right();
+        }
+        return false;
+    }
+
     static Node insert(Node node, Node newNode) {
         if (node.isNil()) {
             return newNode;

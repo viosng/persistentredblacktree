@@ -412,6 +412,40 @@ class PersistentRedBlackTreeTest {
         }
     }
 
+    private static Stream<Arguments> createContainTest() {
+        return Stream.of(
+                Arguments.of(red(3).build(), 3),
+                Arguments.of(black(5).build(), 5),
+                Arguments.of(black(5).left(red(3).build()).build(), 3),
+                Arguments.of(black(5).right(red(7).build()).build(), 7)
+        );
+    }
+
+    @ParameterizedTest
+    @MethodSource("createContainTest")
+    void should_contain(Node node, int x) {
+        assertTrue(new PersistentRedBlackTree(node).contains(x));
+    }
+
+    private static Stream<Arguments> createNotContainTest() {
+        return Stream.of(
+                Arguments.of(nil(), 1),
+                Arguments.of(nil(), nil().key()),
+                Arguments.of(nil(), doubleNil().key()),
+                Arguments.of(doubleNil(), doubleNil().key()),
+                Arguments.of(red(1).build(), 2),
+                Arguments.of(black(2).build(), 3),
+                Arguments.of(red(2).left(black(1).build()).build(), 0),
+                Arguments.of(red(2).right(black(3).build()).build(), 4)
+        );
+    }
+
+    @ParameterizedTest
+    @MethodSource("createNotContainTest")
+    void should_not_contain(Node node, int x) {
+        assertFalse(new PersistentRedBlackTree(node).contains(x));
+    }
+
     private static Pair<TreeSet<Integer>, PersistentRedBlackTree> fillTrees(int n) {
         TreeSet<Integer> treeSet = new TreeSet<>();
         ThreadLocalRandom random = ThreadLocalRandom.current();
