@@ -34,7 +34,7 @@ public class PersistentRedBlackTree implements Iterable<Integer> {
         return new PersistentRedBlackTree(makeBlack(insert(root, newNode)));
     }
 
-    public Pair<Integer, PersistentRedBlackTree> minRemove() {
+    public Pair<Integer, PersistentRedBlackTree> pollMin() {
         Pair<Integer, Node> pair = minRemove(root);
         return Pair.of(pair.getKey(), new PersistentRedBlackTree(pair.getValue()));
     }
@@ -50,6 +50,32 @@ public class PersistentRedBlackTree implements Iterable<Integer> {
             node = x < node.key() ? node.left() : node.right();
         }
         return false;
+    }
+
+    public int peekMin() {
+        if (root.isNil() || root.isDoubleNil()) {
+            throw new IllegalStateException("Empty tree");
+        }
+        Node node = root;
+        int min = node.key();
+        while (!node.isNil() && !node.isDoubleNil()) {
+            min = node.key();
+            node = node.left();
+        }
+        return min;
+    }
+
+    public int peekMax() {
+        if (root.isNil() || root.isDoubleNil()) {
+            throw new IllegalStateException("Empty tree");
+        }
+        Node node = root;
+        int max = node.key();
+        while (!node.isNil() && !node.isDoubleNil()) {
+            max = node.key();
+            node = node.right();
+        }
+        return max;
     }
 
     static Node insert(Node node, Node newNode) {

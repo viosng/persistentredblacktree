@@ -290,7 +290,7 @@ class PersistentRedBlackTreeTest {
         while(!treeSet.isEmpty()) {
             Integer v = treeSet.pollFirst();
             tree = new PersistentRedBlackTree(tree.root.redden()); // emulate deletion
-            Pair<Integer, PersistentRedBlackTree> pair = tree.minRemove();
+            Pair<Integer, PersistentRedBlackTree> pair = tree.pollMin();
             assertEquals(v, pair.getKey());
             tree = pair.getValue();
             validate(tree);
@@ -444,6 +444,22 @@ class PersistentRedBlackTreeTest {
     @MethodSource("createNotContainTest")
     void should_not_contain(Node node, int x) {
         assertFalse(new PersistentRedBlackTree(node).contains(x));
+    }
+
+    @Test
+    void should_peek_min() {
+        assertThrows(IllegalStateException.class, () -> new PersistentRedBlackTree().peekMin());
+        assertEquals(1, new PersistentRedBlackTree(black(1).build()).peekMin());
+        assertEquals(1, new PersistentRedBlackTree(black(2).left(red(1).build()).build()).peekMin());
+        assertEquals(1, new PersistentRedBlackTree(black(1).right(red(3).build()).build()).peekMin());
+    }
+
+    @Test
+    void should_peek_max() {
+        assertThrows(IllegalStateException.class, () -> new PersistentRedBlackTree().peekMax());
+        assertEquals(1, new PersistentRedBlackTree(black(1).build()).peekMax());
+        assertEquals(2, new PersistentRedBlackTree(black(2).left(red(1).build()).build()).peekMax());
+        assertEquals(3, new PersistentRedBlackTree(black(1).right(red(3).build()).build()).peekMax());
     }
 
     private static Pair<TreeSet<Integer>, PersistentRedBlackTree> fillTrees(int n) {
