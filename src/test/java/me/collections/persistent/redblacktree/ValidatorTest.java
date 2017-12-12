@@ -29,7 +29,7 @@ class ValidatorTest {
         assertThrows(IllegalStateException.class, () -> Validator.checkRedNode(x));
     }
 
-    private static Stream<Node> createDifferentBlackHeightsTests() {
+    private static Stream<Node<Integer>> createDifferentBlackHeightsTests() {
         return Stream.of(
                 black(1)
                         .left(black(2).build())
@@ -50,11 +50,11 @@ class ValidatorTest {
 
     @ParameterizedTest
     @MethodSource("createDifferentBlackHeightsTests")
-    void should_not_validate_different_black_heights(Node x) {
+    void should_not_validate_different_black_heights(Node<Integer> x) {
         assertThrows(IllegalStateException.class, () -> Validator.checkBlackHeight(x));
     }
 
-    private static Stream<Node> createBrokenBSTTests() {
+    private static Stream<Node<Integer>> createBrokenBSTTests() {
         return Stream.of(
                 black(1).left(black(2).build()).build(),
                 black(1).right(black(0).build()).build(),
@@ -73,11 +73,11 @@ class ValidatorTest {
 
     @ParameterizedTest
     @MethodSource("createBrokenBSTTests")
-    void should_not_validate_broken_bst(Node x) {
+    void should_not_validate_broken_bst(Node<Integer> x) {
         assertThrows(IllegalStateException.class, () -> Validator.checkBST(x));
     }
 
-    private static Stream<Node> createValidateTests() {
+    private static Stream<Node<Integer>> createValidateTests() {
         return Stream.of(
                 nil(),
                 black(1).build(),
@@ -99,7 +99,7 @@ class ValidatorTest {
 
     @ParameterizedTest
     @MethodSource("createValidateTests")
-    void should_validate(Node x) {
-        Validator.validate(new PersistentRedBlackTree(x));
+    void should_validate(Node<Integer> x) {
+        Validator.validate(new PersistentRedBlackTree<>(x));
     }
 }

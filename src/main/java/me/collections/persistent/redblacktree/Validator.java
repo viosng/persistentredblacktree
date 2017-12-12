@@ -1,6 +1,7 @@
 package me.collections.persistent.redblacktree;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -9,7 +10,7 @@ import java.util.List;
  */
 public class Validator {
 
-    public static void validate(PersistentRedBlackTree tree) {
+    public static <K extends Comparable<K>> void validate(PersistentRedBlackTree<K> tree) {
         if (tree.root.isNil()) return;
         checkRedNode(tree.root);
         checkBlackHeight(tree.root);
@@ -35,21 +36,21 @@ public class Validator {
         return lbh + (node.isBlack() ? 1 : 0);
     }
 
-    static List<Integer> checkBST(Node node) {
-        int min = node.key(), max = node.key();
+    static <K extends Comparable<K>> List<K> checkBST(Node<K> node) {
+        K min = node.key(), max = node.key();
         if (!node.left().isNil()) {
-            List<Integer> left = checkBST(node.left());
-            if (left.get(1) > node.key()) {
+            List<K> left = checkBST(node.left());
+            if (left.get(1).compareTo(node.key()) > 0) {
                 throw new IllegalStateException("Not BST: " + node);
             }
-            min = Math.min(min, left.get(0));
+            min = Collections.min(Arrays.asList(min, left.get(0)));
         }
         if (!node.right().isNil()) {
-            List<Integer> right = checkBST(node.right());
-            if (right.get(0) < node.key()) {
+            List<K> right = checkBST(node.right());
+            if (right.get(1).compareTo(node.key()) < 0) {
                 throw new IllegalStateException("Not BST: " + node);
             }
-            max = Math.max(max, right.get(1));
+            max = Collections.max(Arrays.asList(max, right.get(1)));
         }
         return Arrays.asList(min, max);
     }

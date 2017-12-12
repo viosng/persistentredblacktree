@@ -9,7 +9,8 @@ import static me.collections.persistent.redblacktree.Node.Color.*;
  * @author nickolaysaveliev
  * @since 07/12/2017
  */
-final class Node {
+@SuppressWarnings("unchecked")
+final class Node<K> {
 
     enum Color {
         RED("R"), BLACK("B"), DOUBLE_BLACK("BB");
@@ -21,14 +22,14 @@ final class Node {
         }
     }
 
-    private static final Node NIL = new Node(0, null, null, BLACK);
-    private static final Node DOUBLE_NIL = new Node(0, null, null, DOUBLE_BLACK);
+    private static final Node NIL = new Node(null, null, null, BLACK);
+    private static final Node DOUBLE_NIL = new Node(null, null, null, DOUBLE_BLACK);
 
-    private final int key;
+    private final K key;
     private final Node left, right;
     private final Color color;
 
-    Node(int key, Node left, Node right, Color color) {
+    Node(K key, Node left, Node right, Color color) {
         this.key = key;
         this.left = left;
         this.right = right;
@@ -59,27 +60,27 @@ final class Node {
         return this.color == DOUBLE_BLACK;
     }
 
-    int key() {
+    K key() {
         return key;
     }
 
-    Node left() {
+    Node<K> left() {
         return this == nil() ? nil() : left;
     }
 
-    Node right() {
+    Node<K> right() {
         return this == nil() ? nil() : right;
     }
 
-    Node blacken() {
+    Node<K> blacken() {
         return this.isRed() ? copy(this).black().build() : this;
     }
 
-    Node redden() {
+    Node<K> redden() {
         return !isNil() && isBlack() && left.isBlack() && right.isBlack() ? copy(this).red().build() : this;
     }
 
-    Node demote() {
+    Node<K> demote() {
         return isDoubleBlack() ? (isDoubleNil() ? nil() : copy(this).black().build()) : this;
     }
 
@@ -88,7 +89,7 @@ final class Node {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         final Node node = (Node) o;
-        return key == node.key &&
+        return Objects.equals(key, node.key) &&
                 Objects.equals(left, node.left) &&
                 Objects.equals(right, node.right) &&
                 color == node.color;
@@ -110,73 +111,73 @@ final class Node {
                 '}';
     }
 
-    static Node nil() {
+    static <K1> Node<K1> nil() {
         return NIL;
     }
 
-    static Node doubleNil() {
+    static <K1> Node<K1> doubleNil() {
         return DOUBLE_NIL;
     }
 
-    static class Builder {
-        private int key;
+    static class Builder<K> {
+        private K key;
         private Node left = nil(), right = nil();
         private Color color;
 
-        static Builder copy(Node node) {
+        static <K1> Builder<K1> copy(Node<K1> node) {
             if (node.isNil()) throw new UnsupportedOperationException();
-            return new Builder().key(node.key).left(node.left).right(node.right).color(node.color);
+            return new Builder<K1>().key(node.key).left(node.left).right(node.right).color(node.color);
         }
 
-        static Builder black(int key) {
-            return new Builder().key(key).black();
+        static <K1> Builder<K1> black(K1 key) {
+            return new Builder<K1>().key(key).black();
         }
 
-        static Builder red(int key) {
-            return new Builder().key(key).red();
+        static <K1> Builder<K1> red(K1 key) {
+            return new Builder<K1>().key(key).red();
         }
 
-        static Builder doubleBlack(int key) {
-            return new Builder().key(key).doubleBlack();
+        static <K1> Builder<K1> doubleBlack(K1 key) {
+            return new Builder<K1>().key(key).doubleBlack();
         }
 
-        Builder key(int key) {
+        Builder<K> key(K key) {
             this.key = key;
             return this;
         }
 
-        Builder left(Node left) {
+        Builder<K> left(Node left) {
             this.left = left;
             return this;
         }
 
-        Builder right(Node right) {
+        Builder<K> right(Node right) {
             this.right = right;
             return this;
         }
 
-        Builder color(Color color) {
+        Builder<K> color(Color color) {
             this.color = color;
             return this;
         }
 
-        Builder red() {
+        Builder<K> red() {
             this.color = RED;
             return this;
         }
 
-        Builder black() {
+        Builder<K> black() {
             this.color = BLACK;
             return this;
         }
 
-        Builder doubleBlack() {
+        Builder<K> doubleBlack() {
             this.color = DOUBLE_BLACK;
             return this;
         }
 
-        Node build() {
-            return new Node(key, left, right, color);
+        Node<K> build() {
+            return new Node<>(key, left, right, color);
         }
     }
 }

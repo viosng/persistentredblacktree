@@ -22,7 +22,6 @@ import static org.junit.jupiter.api.Assertions.*;
  * @author nickolaysaveliev
  * @since 08/12/2017
  */
-@SuppressWarnings("Duplicates")
 class PersistentRedBlackTreeTest {
 
     private static Stream<Arguments> createBalanceBlackTests() {
@@ -36,7 +35,7 @@ class PersistentRedBlackTreeTest {
 
     @ParameterizedTest
     @MethodSource("createBalanceBlackTests")
-    void should_balance_black(String caseName, Node x) {
+    void should_balance_black(String caseName, Node<Integer> x) {
         Node balanceResult = red(2)
                 .left(black(1).build())
                 .right(black(3).build())
@@ -53,7 +52,7 @@ class PersistentRedBlackTreeTest {
 
     @ParameterizedTest
     @MethodSource("createBalanceDoubleBlackTests")
-    void should_balance_double_black(String caseName, Node x) {
+    void should_balance_double_black(String caseName, Node<Integer> x) {
         Node balanceResult = black(2)
                 .left(black(1).build())
                 .right(black(3).build())
@@ -61,7 +60,7 @@ class PersistentRedBlackTreeTest {
         assertEquals(balanceResult, balance(x), caseName);
     }
 
-    private static Stream<Node> createBalanceOtherTests() {
+    private static Stream<Node<Integer>> createBalanceOtherTests() {
         return Stream.of(
                 nil(),
                 red(3).build(),
@@ -72,15 +71,16 @@ class PersistentRedBlackTreeTest {
 
     @ParameterizedTest
     @MethodSource("createBalanceOtherTests")
-    void should_balance_other(Node x) {
+    void should_balance_other(Node<Integer> x) {
         assertEquals(x, balance(x));
     }
 
     @Test
     void should_insert() {
+        assertThrows(IllegalArgumentException.class, () -> new PersistentRedBlackTree<>().add(null));
         ThreadLocalRandom random = ThreadLocalRandom.current();
         List<Integer> list = new ArrayList<>();
-        PersistentRedBlackTree tree = new PersistentRedBlackTree();
+        PersistentRedBlackTree<Integer> tree = new PersistentRedBlackTree<>();
         for (int i = 0; i < 1000; i++) {
             int v = random.nextInt(10) - 5;
             tree = tree.add(v);
@@ -94,22 +94,22 @@ class PersistentRedBlackTreeTest {
 
     @Test
     void should_rotate_red_case_1() {
-        Node node1 = red(1)
+        Node<Integer> node1 = red(1)
                 .left(doubleBlack(2).build())
                 .right(black(3).build())
                 .build();
-        Node expected1 = black(3)
+        Node<Integer> expected1 = black(3)
                 .left(red(1)
                         .left(black(2).build())
                         .build())
                 .build();
         assertEquals(balance(expected1), rotate(node1));
 
-        Node node2 = red(1)
+        Node<Integer> node2 = red(1)
                 .left(doubleNil())
                 .right(black(3).build())
                 .build();
-        Node expected2 = black(3)
+        Node<Integer> expected2 = black(3)
                 .left(red(1).build())
                 .build();
         assertEquals(balance(expected2), rotate(node2));
@@ -117,22 +117,22 @@ class PersistentRedBlackTreeTest {
 
     @Test
     void should_rotate_red_case_2() {
-        Node node1 = red(1)
+        Node<Integer> node1 = red(1)
                 .left(black(3).build())
                 .right(doubleBlack(2).build())
                 .build();
-        Node expected1 = black(3)
+        Node<Integer> expected1 = black(3)
                 .right(red(1)
                         .right(black(2).build())
                         .build())
                 .build();
         assertEquals(balance(expected1), rotate(node1));
 
-        Node node2 = red(1)
+        Node<Integer> node2 = red(1)
                 .left(black(3).build())
                 .right(doubleNil())
                 .build();
-        Node expected2 = black(3)
+        Node<Integer> expected2 = black(3)
                 .right(red(1).build())
                 .build();
         assertEquals(balance(expected2), rotate(node2));
@@ -140,22 +140,22 @@ class PersistentRedBlackTreeTest {
 
     @Test
     void should_rotate_black_case_1() {
-        Node node1 = black(1)
+        Node<Integer> node1 = black(1)
                 .left(doubleBlack(2).build())
                 .right(black(3).build())
                 .build();
-        Node expected1 = doubleBlack(3)
+        Node<Integer> expected1 = doubleBlack(3)
                 .left(red(1)
                         .left(black(2).build())
                         .build())
                 .build();
         assertEquals(balance(expected1), rotate(node1));
 
-        Node node2 = black(1)
+        Node<Integer> node2 = black(1)
                 .left(doubleNil())
                 .right(black(3).build())
                 .build();
-        Node expected2 = doubleBlack(3)
+        Node<Integer> expected2 = doubleBlack(3)
                 .left(red(1).build())
                 .build();
         assertEquals(balance(expected2), rotate(node2));
@@ -163,22 +163,22 @@ class PersistentRedBlackTreeTest {
 
     @Test
     void should_rotate_black_case_2() {
-        Node node1 = black(1)
+        Node<Integer> node1 = black(1)
                 .left(black(3).build())
                 .right(doubleBlack(2).build())
                 .build();
-        Node expected1 = doubleBlack(3)
+        Node<Integer> expected1 = doubleBlack(3)
                 .right(red(1)
                         .right(black(2).build())
                         .build())
                 .build();
         assertEquals(balance(expected1), rotate(node1));
 
-        Node node2 = black(1)
+        Node<Integer> node2 = black(1)
                 .left(black(3).build())
                 .right(doubleNil())
                 .build();
-        Node expected2 = doubleBlack(3)
+        Node<Integer> expected2 = doubleBlack(3)
                 .right(red(1).build())
                 .build();
         assertEquals(balance(expected2), rotate(node2));
@@ -186,13 +186,13 @@ class PersistentRedBlackTreeTest {
 
     @Test
     void should_rotate_black_case_3() {
-        Node node1 = black(1)
+        Node<Integer> node1 = black(1)
                 .left(doubleBlack(2).build())
                 .right(red(3)
                         .left(black(4).build())
                         .build())
                 .build();
-        Node expected1 = black(3)
+        Node<Integer> expected1 = black(3)
                 .left(balance(black(4)
                                 .left(red(1)
                                         .left(black(2).build())
@@ -203,13 +203,13 @@ class PersistentRedBlackTreeTest {
                 .build();
         assertEquals(expected1, rotate(node1));
 
-        Node node2 = black(1)
+        Node<Integer> node2 = black(1)
                 .left(doubleNil())
                 .right(red(3)
                         .left(black(4).build())
                         .build())
                 .build();
-        Node expected2 = black(3)
+        Node<Integer> expected2 = black(3)
                 .left(balance(black(4)
                                 .left(red(1).build())
                                 .build()
@@ -221,13 +221,13 @@ class PersistentRedBlackTreeTest {
 
     @Test
     void should_rotate_black_case_4() {
-        Node node1 = black(1)
+        Node<Integer> node1 = black(1)
                 .left(red(3)
                         .right(black(4).build())
                         .build())
                 .right(doubleBlack(2).build())
                 .build();
-        Node expected1 = black(3)
+        Node<Integer> expected1 = black(3)
                 .right(balance(black(4)
                                 .right(red(1)
                                         .right(black(2).build())
@@ -238,13 +238,13 @@ class PersistentRedBlackTreeTest {
                 .build();
         assertEquals(expected1, rotate(node1));
 
-        Node node2 = black(1)
+        Node<Integer> node2 = black(1)
                 .left(red(3)
                         .right(black(4).build())
                         .build())
                 .right(doubleNil())
                 .build();
-        Node expected2 = black(3)
+        Node<Integer> expected2 = black(3)
                 .right(balance(black(4)
                                 .right(red(1).build())
                                 .build()
@@ -254,7 +254,7 @@ class PersistentRedBlackTreeTest {
         assertEquals(expected2, rotate(node2));
     }
 
-    private static Stream<Node> createNotRotateTests() {
+    private static Stream<Node<Integer>> createNotRotateTests() {
         return Stream.of(
                 nil(),
                 red(3).build(),
@@ -266,31 +266,31 @@ class PersistentRedBlackTreeTest {
 
     @ParameterizedTest
     @MethodSource("createNotRotateTests")
-    void should_not_rotate(Node x) {
+    void should_not_rotate(Node<Integer> x) {
         assertEquals(x, rotate(x));
     }
 
     @Test
     void should_find_min_and_remove() {
-        assertThrows(IllegalArgumentException.class, () -> minRemove(nil()));
-        assertThrows(IllegalArgumentException.class, () -> minRemove(doubleNil()));
+        assertThrows(IllegalArgumentException.class, () -> PersistentRedBlackTree.<Integer>minRemove(nil()));
+        assertThrows(IllegalArgumentException.class, () -> PersistentRedBlackTree.<Integer>minRemove(doubleNil()));
         assertEquals(Pair.of(1, nil()), minRemove(red(1).build()));
         assertEquals(Pair.of(1, doubleNil()), minRemove(black(1).build()));
         assertEquals(Pair.of(1, black(2).build()), minRemove(black(1).right(red(2).build()).build()));
 
-        Node node = black(3)
+        Node<Integer> node = black(3)
                 .left(black(1).right(red(2).build()).build())
                 .right(black(4).build())
                 .build();
         assertEquals(Pair.of(1, copy(node).left(black(2).build()).build()), minRemove(node));
 
-        Pair<TreeSet<Integer>, PersistentRedBlackTree> treePair = fillTrees(1000);
+        Pair<TreeSet<Integer>, PersistentRedBlackTree<Integer>> treePair = fillTrees(2000);
         TreeSet<Integer> treeSet = treePair.getKey();
-        PersistentRedBlackTree tree = treePair.getValue();
+        PersistentRedBlackTree<Integer> tree = treePair.getValue();
         while(!treeSet.isEmpty()) {
             Integer v = treeSet.pollFirst();
-            tree = new PersistentRedBlackTree(tree.root.redden()); // emulate deletion
-            Pair<Integer, PersistentRedBlackTree> pair = tree.pollMin();
+            tree = new PersistentRedBlackTree<>(tree.root.redden()); // emulate deletion
+            Pair<Integer, PersistentRedBlackTree<Integer>> pair = tree.pollMin();
             assertEquals(v, pair.getKey());
             tree = pair.getValue();
             validate(tree);
@@ -299,49 +299,50 @@ class PersistentRedBlackTreeTest {
 
     @Test
     void should_delete() {
-        assertEquals(nil(), delete(nil(), 1));
+        assertEquals(nil(), delete(nil(), 1, Integer::compareTo));
 
-        assertEquals(nil(), delete(red(1).build(), 1));
+        assertEquals(nil(), delete(red(1).build(), 1, Integer::compareTo));
 
-        assertEquals(red(1).build(), delete(red(1).build(), 2));
-        assertEquals(doubleNil(), delete(black(1).build(), 1));
-        assertEquals(black(1).build(), delete(black(1).build(), 2));
+        assertEquals(red(1).build(), delete(red(1).build(), 2, Integer::compareTo));
+        assertEquals(doubleNil(), delete(black(1).build(), 1, Integer::compareTo));
+        assertEquals(black(1).build(), delete(black(1).build(), 2, Integer::compareTo));
 
-        Node node1 = black(2).left(red(1).build()).build();
-        assertEquals(black(2).build(), delete(node1, 1));
-        assertEquals(black(1).build(), delete(node1, 2));
-        assertEquals(node1, delete(node1, 3));
+        Node<Integer> node1 = black(2).left(red(1).build()).build();
+        assertEquals(black(2).build(), delete(node1, 1, Integer::compareTo));
+        assertEquals(black(1).build(), delete(node1, 2, Integer::compareTo));
+        assertEquals(node1, delete(node1, 3, Integer::compareTo));
 
-        Node node2 = black(2).left(red(1).build()).right(black(3).build()).build();
-        assertEquals(black(2).right(black(3).build()).build(), delete(node2, 1));
-        assertEquals(black(3).left(red(1).build()).right(doubleNil()).build(), delete(node2, 2));
-        assertEquals(black(2).left(red(1).build()).right(doubleNil()).build(), delete(node2, 3));
+        Node<Integer> node2 = black(2).left(red(1).build()).right(black(3).build()).build();
+        assertEquals(black(2).right(black(3).build()).build(), delete(node2, 1, Integer::compareTo));
+        assertEquals(black(3).left(red(1).build()).right(doubleNil()).build(), delete(node2, 2, Integer::compareTo));
+        assertEquals(black(2).left(red(1).build()).right(doubleNil()).build(), delete(node2, 3, Integer::compareTo));
 
-        Node node3 = black(2).left(red(1).build()).right(red(3).build()).build();
-        assertEquals(black(2).right(red(3).build()).build(), delete(node3, 1));
-        assertEquals(black(3).left(red(1).build()).right(nil()).build(), delete(node3, 2));
-        assertEquals(black(2).left(red(1).build()).right(nil()).build(), delete(node3, 3));
+        Node<Integer> node3 = black(2).left(red(1).build()).right(red(3).build()).build();
+        assertEquals(black(2).right(red(3).build()).build(), delete(node3, 1, Integer::compareTo));
+        assertEquals(black(3).left(red(1).build()).right(nil()).build(), delete(node3, 2, Integer::compareTo));
+        assertEquals(black(2).left(red(1).build()).right(nil()).build(), delete(node3, 3, Integer::compareTo));
     }
 
     @Test
     void should_remove() {
-        assertEquals(new PersistentRedBlackTree(), new PersistentRedBlackTree().remove(1));
-        assertEquals(new PersistentRedBlackTree(), new PersistentRedBlackTree(red(1).build()).remove(1));
-        assertEquals(new PersistentRedBlackTree(red(1).build()), new PersistentRedBlackTree(red(1).build()).remove(2));
-        assertEquals(new PersistentRedBlackTree(), new PersistentRedBlackTree(black(1).build()).remove(1));
-        assertEquals(new PersistentRedBlackTree(red(1).build()), new PersistentRedBlackTree(black(1).build()).remove(2));
-        assertEquals(new PersistentRedBlackTree(black(3).build()), new PersistentRedBlackTree(black(1).build())
+        assertThrows(IllegalArgumentException.class, () -> new PersistentRedBlackTree<>().remove(null));
+        assertEquals(new PersistentRedBlackTree<Integer>(), new PersistentRedBlackTree<Integer>().remove(1));
+        assertEquals(new PersistentRedBlackTree<Integer>(), new PersistentRedBlackTree<>(red(1).build()).remove(1));
+        assertEquals(new PersistentRedBlackTree<>(red(1).build()), new PersistentRedBlackTree<>(red(1).build()).remove(2));
+        assertEquals(new PersistentRedBlackTree<Integer>(), new PersistentRedBlackTree<>(black(1).build()).remove(1));
+        assertEquals(new PersistentRedBlackTree<>(red(1).build()), new PersistentRedBlackTree<>(black(1).build()).remove(2));
+        assertEquals(new PersistentRedBlackTree<>(black(3).build()), new PersistentRedBlackTree<>(black(1).build())
                 .remove(1).add(2).add(3).remove(3).remove(1).remove(2).remove(100500).add(3));
     }
 
     @Test
     void should_remove_min() {
-        Pair<TreeSet<Integer>, PersistentRedBlackTree> pair = fillTrees(1000);
+        Pair<TreeSet<Integer>, PersistentRedBlackTree<Integer>> pair = fillTrees(1000);
         TreeSet<Integer> treeSet = pair.getKey();
-        PersistentRedBlackTree tree = pair.getValue();
+        PersistentRedBlackTree<Integer> tree = pair.getValue();
         while(!treeSet.isEmpty()) {
             Integer v = treeSet.pollFirst();
-            PersistentRedBlackTree newTree = tree.remove(v);
+            PersistentRedBlackTree<Integer> newTree = tree.remove(v);
             assertNotEquals(tree, newTree);
             validate(newTree);
             tree = newTree;
@@ -351,7 +352,7 @@ class PersistentRedBlackTreeTest {
     @Test
     void should_remove_random() {
         ThreadLocalRandom random = ThreadLocalRandom.current();
-        PersistentRedBlackTree tree = new PersistentRedBlackTree();
+        PersistentRedBlackTree<Integer> tree = new PersistentRedBlackTree<>();
         List<Integer> values = new ArrayList<>();
         for (int i = 0; i < 1000; i++) {
             int v = random.nextInt();
@@ -364,7 +365,7 @@ class PersistentRedBlackTreeTest {
             int index = random.nextInt(n);
             Collections.swap(values, index, n - 1);
             int v = values.get(n - 1);
-            PersistentRedBlackTree newTree = tree.remove(v);
+            PersistentRedBlackTree<Integer> newTree = tree.remove(v);
             assertNotEquals(tree, newTree);
 
             assertEquals(values.subList(0, n - 1).stream().sorted().collect(Collectors.toList()), newTree.asList());
@@ -380,13 +381,13 @@ class PersistentRedBlackTreeTest {
     @Test
     void should_add_and_remove() {
         ThreadLocalRandom random = ThreadLocalRandom.current();
-        PersistentRedBlackTree tree = new PersistentRedBlackTree();
+        PersistentRedBlackTree<Integer> tree = new PersistentRedBlackTree<>();
         ArrayList<Integer> values = new ArrayList<>();
         int operationsCount = 10000;
         double border = 0.5, step = 0.01;
         while (operationsCount-- > 0) {
             double randDouble = random.nextDouble();
-            PersistentRedBlackTree newTree;
+            PersistentRedBlackTree<Integer> newTree;
             if (values.isEmpty() || randDouble > border) {
                 border -= step;
 
@@ -423,16 +424,13 @@ class PersistentRedBlackTreeTest {
 
     @ParameterizedTest
     @MethodSource("createContainTest")
-    void should_contain(Node node, int x) {
-        assertTrue(new PersistentRedBlackTree(node).contains(x));
+    void should_contain(Node<Integer> node, int x) {
+        assertTrue(new PersistentRedBlackTree<>(node).contains(x));
     }
 
     private static Stream<Arguments> createNotContainTest() {
         return Stream.of(
-                Arguments.of(nil(), 1),
-                Arguments.of(nil(), nil().key()),
-                Arguments.of(nil(), doubleNil().key()),
-                Arguments.of(doubleNil(), doubleNil().key()),
+                Arguments.of(doubleNil(), 2),
                 Arguments.of(red(1).build(), 2),
                 Arguments.of(black(2).build(), 3),
                 Arguments.of(red(2).left(black(1).build()).build(), 0),
@@ -442,30 +440,44 @@ class PersistentRedBlackTreeTest {
 
     @ParameterizedTest
     @MethodSource("createNotContainTest")
-    void should_not_contain(Node node, int x) {
-        assertFalse(new PersistentRedBlackTree(node).contains(x));
+    void should_not_contain(Node<Integer> node, Integer x) {
+        assertFalse(new PersistentRedBlackTree<>(node).contains(x));
     }
 
     @Test
     void should_peek_min() {
         assertThrows(IllegalStateException.class, () -> new PersistentRedBlackTree().peekMin());
-        assertEquals(1, new PersistentRedBlackTree(black(1).build()).peekMin());
-        assertEquals(1, new PersistentRedBlackTree(black(2).left(red(1).build()).build()).peekMin());
-        assertEquals(1, new PersistentRedBlackTree(black(1).right(red(3).build()).build()).peekMin());
+        assertEquals(1, new PersistentRedBlackTree<>(black(1).build()).peekMin().intValue());
+        assertEquals(1, new PersistentRedBlackTree<>(black(2).left(red(1).build()).build()).peekMin().intValue());
+        assertEquals(1, new PersistentRedBlackTree<>(black(1).right(red(3).build()).build()).peekMin().intValue());
     }
 
     @Test
     void should_peek_max() {
         assertThrows(IllegalStateException.class, () -> new PersistentRedBlackTree().peekMax());
-        assertEquals(1, new PersistentRedBlackTree(black(1).build()).peekMax());
-        assertEquals(2, new PersistentRedBlackTree(black(2).left(red(1).build()).build()).peekMax());
-        assertEquals(3, new PersistentRedBlackTree(black(1).right(red(3).build()).build()).peekMax());
+        assertEquals(1, new PersistentRedBlackTree<>(black(1).build()).peekMax().intValue());
+        assertEquals(2, new PersistentRedBlackTree<>(black(2).left(red(1).build()).build()).peekMax().intValue());
+        assertEquals(3, new PersistentRedBlackTree<>(black(1).right(red(3).build()).build()).peekMax().intValue());
     }
 
-    private static Pair<TreeSet<Integer>, PersistentRedBlackTree> fillTrees(int n) {
+    @Test
+    void should_use_different_comparators() {
+        PersistentRedBlackTree<String> ascendingTree = new PersistentRedBlackTree<String>()
+                .add("a").add("b").add("c");
+        PersistentRedBlackTree<String> descendingTree = new PersistentRedBlackTree<String>(Comparator.reverseOrder())
+                .add("a").add("b").add("c");
+
+        assertEquals(ascendingTree.peekMin(), descendingTree.peekMax());
+        assertEquals(ascendingTree.peekMax(), descendingTree.peekMin());
+        ascendingTree = ascendingTree.pollMin().getValue();
+        descendingTree = descendingTree.pollMin().getValue();
+        assertEquals(ascendingTree.peekMin(), descendingTree.peekMin());
+    }
+
+    private static Pair<TreeSet<Integer>, PersistentRedBlackTree<Integer>> fillTrees(int n) {
         TreeSet<Integer> treeSet = new TreeSet<>();
         ThreadLocalRandom random = ThreadLocalRandom.current();
-        PersistentRedBlackTree tree = new PersistentRedBlackTree();
+        PersistentRedBlackTree<Integer> tree = new PersistentRedBlackTree<>();
         for (int i = 0; i < n; i++) {
             int v = random.nextInt();
             while(treeSet.contains(v)) {

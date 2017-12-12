@@ -2,10 +2,7 @@ package me.collections.persistent.redblacktree;
 
 import me.collections.util.Pair;
 
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 import java.util.function.Consumer;
 
 import static me.collections.persistent.redblacktree.Node.Builder.*;
@@ -16,48 +13,62 @@ import static me.collections.persistent.redblacktree.Node.nil;
  * @author nickolaysaveliev
  * @since 07/12/2017
  */
-@SuppressWarnings({"WeakerAccess", "SuspiciousNameCombination"})
-public class PersistentRedBlackTree implements Iterable<Integer> {
+@SuppressWarnings("WeakerAccess")
+public class PersistentRedBlackTree<K extends Comparable<K>> implements Iterable<K> {
 
-    final Node root;
+    final Node<K> root;
+    private final Comparator<K> comparator;
 
     public PersistentRedBlackTree() {
         this.root = nil();
+        this.comparator = Comparator.naturalOrder();
     }
 
-    PersistentRedBlackTree(Node root) {
+    public PersistentRedBlackTree(Comparator<K> comparator) {
+        this.root = nil();
+        this.comparator = checkNotNull(comparator);
+    }
+
+    PersistentRedBlackTree(Node<K> root) {
         this.root = root;
+        this.comparator = Comparator.naturalOrder();
     }
 
-    public PersistentRedBlackTree add(int x) {
-        Node newNode = red(x).build();
-        return new PersistentRedBlackTree(makeBlack(insert(root, newNode)));
+    PersistentRedBlackTree(Node<K> root, Comparator<K> comparator) {
+        this.root = root;
+        this.comparator = comparator;
     }
 
-    public Pair<Integer, PersistentRedBlackTree> pollMin() {
-        Pair<Integer, Node> pair = minRemove(root);
-        return Pair.of(pair.getKey(), new PersistentRedBlackTree(pair.getValue()));
+    public PersistentRedBlackTree<K> add(K x) {
+        Node<K> newNode = red(checkNotNull(x)).build();
+        return new PersistentRedBlackTree<>(makeBlack(insert(root, newNode, comparator)), comparator);
     }
 
-    public PersistentRedBlackTree remove(int x) {
-        return new PersistentRedBlackTree(delete(root.redden(), x));
+    public Pair<K, PersistentRedBlackTree<K>> pollMin() {
+        Pair<K, Node<K>> pair = minRemove(root);
+        return Pair.of(pair.getKey(), new PersistentRedBlackTree<>(pair.getValue(), comparator));
     }
 
-    public boolean contains(int x) {
-        Node node = root;
+    public PersistentRedBlackTree<K> remove(K x) {
+        return new PersistentRedBlackTree<>(delete(root.redden(), checkNotNull(x), comparator), comparator);
+    }
+
+    public boolean contains(K x) {
+        checkNotNull(x);
+        Node<K> node = root;
         while (!node.isNil() && !node.isDoubleNil()) {
-            if (x == node.key()) return true;
-            node = x < node.key() ? node.left() : node.right();
+            if (node.key().equals(x)) return true;
+            node = comparator.compare(x, node.key()) < 0 ? node.left() : node.right();
         }
         return false;
     }
 
-    public int peekMin() {
+    public K peekMin() {
         if (root.isNil() || root.isDoubleNil()) {
             throw new IllegalStateException("Empty tree");
         }
-        Node node = root;
-        int min = node.key();
+        Node<K> node = root;
+        K min = node.key();
         while (!node.isNil() && !node.isDoubleNil()) {
             min = node.key();
             node = node.left();
@@ -65,12 +76,12 @@ public class PersistentRedBlackTree implements Iterable<Integer> {
         return min;
     }
 
-    public int peekMax() {
+    public K peekMax() {
         if (root.isNil() || root.isDoubleNil()) {
             throw new IllegalStateException("Empty tree");
         }
-        Node node = root;
-        int max = node.key();
+        Node<K> node = root;
+        K max = node.key();
         while (!node.isNil() && !node.isDoubleNil()) {
             max = node.key();
             node = node.right();
@@ -78,17 +89,17 @@ public class PersistentRedBlackTree implements Iterable<Integer> {
         return max;
     }
 
-    static Node insert(Node node, Node newNode) {
+    static <K1 extends Comparable<K1>> Node<K1> insert(Node<K1> node, Node<K1> newNode, Comparator<K1> comparator) {
         if (node.isNil()) {
             return newNode;
-        } else if (newNode.key() < node.key()) {
-            return balance(copy(node).left(insert(node.left(), newNode)).build());
+        } else if (comparator.compare(newNode.key(), node.key()) < 0) {
+            return balance(copy(node).left(insert(node.left(), newNode, comparator)).build());
         } else {
-            return balance(copy(node).right(insert(node.right(), newNode)).build());
+            return balance(copy(node).right(insert(node.right(), newNode, comparator)).build());
         }
     }
 
-    static Node balance(Node node) {
+    static <K1 extends Comparable<K1>> Node<K1> balance(Node<K1> node) {
         if (!node.isNil() && node.isBlack()) {
             boolean leftLeftCase = node.left().isRed() && node.left().left().isRed();
             if (leftLeftCase) {
@@ -171,9 +182,9 @@ public class PersistentRedBlackTree implements Iterable<Integer> {
         return node;
     }
 
-    static Node rotate(Node node) {
-        Node left = node.left();
-        Node right = node.right();
+    static <K1 extends Comparable<K1>> Node<K1> rotate(Node<K1> node) {
+        Node<K1> left = node.left();
+        Node<K1> right = node.right();
         if (node.isRed()) {
             // R (T BB a x b) y (T B c z d) = balance B (T R (T B a x b) y c) z d
             // R EE           y (T B c z d) = balance B (T R E y c) z d
@@ -264,7 +275,7 @@ public class PersistentRedBlackTree implements Iterable<Integer> {
         return node;
     }
 
-    static Pair<Integer, Node> minRemove(Node node) {
+    static <K1 extends Comparable<K1>> Pair<K1, Node<K1>> minRemove(Node<K1> node) {
         if (node.isNil() || node.isDoubleNil()) {
             throw new IllegalArgumentException("Empty tree");
         }
@@ -278,40 +289,40 @@ public class PersistentRedBlackTree implements Iterable<Integer> {
                 && node.right().isRed() && node.right().left().isNil() && node.right().right().isNil()) {
             return Pair.of(node.key(), node.right().blacken());
         }
-        Pair<Integer, Node> leftMin = minRemove(node.left());
+        Pair<K1, Node<K1>> leftMin = minRemove(node.left());
         return Pair.of(leftMin.getKey(), rotate(copy(node).left(leftMin.getValue()).build()));
     }
 
-    static Node delete(Node node, int x) {
+    static <K1 extends Comparable<K1>> Node<K1> delete(Node<K1> node, K1 x, Comparator<K1> comparator) {
         if (node.isNil()) return node;
-        Node left = node.left();
-        Node right = node.right();
-        int key = node.key();
+        Node<K1> left = node.left();
+        Node<K1> right = node.right();
+        K1 key = node.key();
         if (node.isRed() && left.isNil() && right.isNil()) {
-            return key == x ? nil() : node;
+            return key.equals(x) ? nil() : node;
         }
         if (node.isBlackNode() && left.isNil() && right.isNil()) {
-            return key == x ? doubleNil() : node;
+            return key.equals(x) ? doubleNil() : node;
         }
         if (node.isBlackNode() && left.isRed() && left.left().isNil() && left.right().isNil() && right.isNil()) {
-            if (x < key) {
+            if (comparator.compare(x, key) < 0) {
                 return copy(node)
-                        .left(delete(left, x))
+                        .left(delete(left, x, comparator))
                         .build();
-            } else if (x == key) {
+            } else if (key.equals(x)) {
                 return left.blacken();
             } else {
                 return node;
             }
         }
-        if (x < key) {
+        if (comparator.compare(x, key) < 0) {
             return rotate(
                     copy(node)
-                            .left(delete(left, x))
+                            .left(delete(left, x, comparator))
                             .build()
             );
-        } else if (x == key) {
-            Pair<Integer, Node> pair = minRemove(right);
+        } else if (key.equals(x)) {
+            Pair<K1, Node<K1>> pair = minRemove(right);
             return rotate(
                     copy(node)
                             .key(pair.getKey())
@@ -321,13 +332,13 @@ public class PersistentRedBlackTree implements Iterable<Integer> {
         } else {
             return rotate(
                     copy(node)
-                            .right(delete(right, x))
+                            .right(delete(right, x, comparator))
                             .build()
             );
         }
     }
 
-    private static void inOrderTraverse(Node root, Consumer<Node> nodeConsumer) {
+    private static <K1 extends Comparable<K1>> void inOrderTraverse(Node<K1> root, Consumer<Node<K1>> nodeConsumer) {
         if (root.isNil()) return;
         inOrderTraverse(root.left(), nodeConsumer);
         nodeConsumer.accept(root);
@@ -355,30 +366,37 @@ public class PersistentRedBlackTree implements Iterable<Integer> {
     }
 
     @Override
-    public Iterator<Integer> iterator() {
-        List<Integer> nodes = new ArrayList<>();
+    public Iterator<K> iterator() {
+        List<K> nodes = new ArrayList<>();
         inOrderTraverse(root, node -> nodes.add(node.key()));
-        Iterator<Integer> iterator = nodes.iterator();
-        return new Iterator<Integer>() {
+        Iterator<K> iterator = nodes.iterator();
+        return new Iterator<K>() {
             @Override
             public boolean hasNext() {
                 return iterator.hasNext();
             }
 
             @Override
-            public Integer next() {
+            public K next() {
                 return iterator.next();
             }
         };
     }
 
-    public List<Integer> asList() {
-        List<Integer> list = new ArrayList<>();
+    public List<K> asList() {
+        List<K> list = new ArrayList<>();
         iterator().forEachRemaining(list::add);
         return list;
     }
 
-    private static Node makeBlack(Node node) {
+    private static <K1 extends Comparable<K1>> Node<K1> makeBlack(Node<K1> node) {
         return node.isNil() ? nil() : copy(node).black().build();
+    }
+
+    private static <V> V checkNotNull(V value) {
+        if (value == null) {
+            throw new IllegalArgumentException("Null values aren't allowed");
+        }
+        return value;
     }
 }
