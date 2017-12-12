@@ -1,6 +1,5 @@
-# persistentredblacktree
-Persistent Red-Black Tree
- Methods:
+# Persistent Red-Black Tree
+## Methods:
  1. add
  2. remove
  3. peekMin
