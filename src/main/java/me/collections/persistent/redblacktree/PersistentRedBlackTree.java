@@ -57,8 +57,9 @@ public class PersistentRedBlackTree<K extends Comparable<K>> implements Iterable
         checkNotNull(x);
         Node<K> node = root;
         while (!node.isNil() && !node.isDoubleNil()) {
-            if (node.key().equals(x)) return true;
-            node = comparator.compare(x, node.key()) < 0 ? node.left() : node.right();
+            int compare = comparator.compare(x, node.key());
+            if (compare == 0) return true;
+            node = compare < 0 ? node.left() : node.right();
         }
         return false;
     }
@@ -298,14 +299,14 @@ public class PersistentRedBlackTree<K extends Comparable<K>> implements Iterable
         Node<K1> left = node.left();
         Node<K1> right = node.right();
         K1 key = node.key();
+        int compare = comparator.compare(x, key);
         if (node.isRed() && left.isNil() && right.isNil()) {
-            return key.equals(x) ? nil() : node;
+            return compare == 0 ? nil() : node;
         }
         if (node.isBlackNode() && left.isNil() && right.isNil()) {
-            return key.equals(x) ? doubleNil() : node;
+            return compare == 0 ? doubleNil() : node;
         }
 
-        int compare = comparator.compare(x, key);
         if (node.isBlackNode() && left.isRed() && left.left().isNil() && left.right().isNil() && right.isNil()) {
             if (compare < 0) {
                 return copy(node)
